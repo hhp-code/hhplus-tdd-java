@@ -9,7 +9,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class PointServiceTest {
-  PointService pointService = new PointService(new UserPointTable(), new PointHistoryTable());
+  private final PointService pointService = new PointService(new UserPointTable(), new PointHistoryTable());
 
   /**
    * point 메소드를 일반 입력값을 테스트하고
@@ -115,6 +115,27 @@ class PointServiceTest {
   }
 
   /**
+   * charge 메소드의 동시성이 순차적으로 관리되는지 확인합니다.
+   */
+  @Test
+  void charge_concurrency(){
+    // given
+    long id = 1;
+    long amount = 100;
+    // when
+    Runnable runnable = () -> pointService.charge(id, amount);
+    Thread thread1 = new Thread(runnable);
+    Thread thread2 = new Thread(runnable);
+    thread1.start();
+    thread2.start();
+    // then
+    assertDoesNotThrow(() -> {
+      thread1.join();
+      thread2.join();
+    });
+  }
+
+  /**
    * use 메소드에 액수 사용을 하고나서 사용값이 정상적으로 반영되는지 확인합니다.
    */
   @Test
@@ -172,6 +193,28 @@ class PointServiceTest {
 
 
   /**
+   * use 메소드의 동시성이 순차적으로 관리되는지 확인합니다.
+   */
+  @Test
+  void use_concurrency(){
+    // given
+    long id = 1;
+    long amount = 100;
+    // when
+    pointService.charge(id, amount);
+    Runnable runnable = () -> pointService.use(id, 10);
+    Thread thread1 = new Thread(runnable);
+    Thread thread2 = new Thread(runnable);
+    thread1.start();
+    thread2.start();
+    // then
+    assertDoesNotThrow(() -> {
+      thread1.join();
+      thread2.join();
+    });
+  }
+
+  /**
    * history 메소드를 테스트하고, 결과값이 없을때 빈 리스트가 반환되는지 확인합니다.
    */
   @Test
@@ -201,7 +244,6 @@ class PointServiceTest {
       assertThat(history.type()).isEqualTo(TransactionType.CHARGE);
     });
   }
-
   /**
    * history 메소드에서 출금하고나서 출금이력이 출력되는지 확인합니다.
    */
@@ -221,6 +263,7 @@ class PointServiceTest {
       assertThat(history.type()).isEqualTo(TransactionType.USE);
     });
   }
+
 
   /**
    * history 메소드에서 임의의 충전과 출금작업을 통해 충전이력과 출금이력이 출력되는지 확인합니다.

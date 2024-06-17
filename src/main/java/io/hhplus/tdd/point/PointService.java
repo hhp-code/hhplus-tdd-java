@@ -28,7 +28,7 @@ public class PointService {
     return pointHistoryTable.selectAllByUserId(id);
   }
 
-  public UserPoint charge(long id, long amount) {
+  public synchronized UserPoint charge(long id, long amount) {
     if(amount < 0) {
       throw new IllegalArgumentException("amount must be positive");
     }
@@ -43,7 +43,7 @@ public class PointService {
     return userPointTable.selectById(id);
   }
 
-  public UserPoint use(long id, long amount) {
+  public synchronized UserPoint use(long id, long amount) {
     if(amount < 0) {
       throw new IllegalArgumentException("amount must be positive");
     }
