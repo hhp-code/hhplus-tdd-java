@@ -10,7 +10,10 @@ import org.junit.jupiter.api.Test;
 public class PointServiceQueueTest {
   private final PointService pointService = new PointService(new PointRepositoryImpl());
 
-  /** 10개의 스레드를 통해 10원을 100번 충전하고, 마지막에 1000원을 사용하며 정확하게 0원이 되는지 확인합니다. synchronized : 51112ms */
+  /**
+   *  10개의 스레드를 통해 10원을 100번 충전하고, 5원을 100번 사용하며 정확하게 500원이 되는지 확인합니다.
+   * synchronized : 51112ms
+   */
   @Test
   void charge_and_use_concurrency() throws InterruptedException {
     // given
@@ -40,5 +43,7 @@ public class PointServiceQueueTest {
     System.out.println(endTime - startTime + "ms");
     assertEquals(500, operation.point());
   }
+
+
 
 }

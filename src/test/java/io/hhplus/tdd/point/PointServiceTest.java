@@ -3,8 +3,6 @@ package io.hhplus.tdd.point;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import io.hhplus.tdd.database.PointHistoryTable;
-import io.hhplus.tdd.database.UserPointTable;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
