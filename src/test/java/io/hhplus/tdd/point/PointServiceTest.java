@@ -9,7 +9,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class PointServiceTest {
-  private final PointService pointService = new PointService(new UserPointTable(), new PointHistoryTable());
+  private final PointService pointService = new PointService(new  PointRepositoryImpl());
 
   /**
    * point 메소드를 일반 입력값을 테스트하고
@@ -52,10 +52,10 @@ class PointServiceTest {
     long id = 1;
     long amount = 100;
     // when
-    UserPoint charged = pointService.charge(id, amount);
+    pointService.charge(id, amount);
     UserPoint userPoint = pointService.point(id);
     // then
-    assertEquals(userPoint.point(), charged.point());
+    assertEquals(userPoint.point(), amount);
   }
   /**
    * charge 메소드에 음수값을 입력하면 예외가 발생하는지 확인합니다.
@@ -85,12 +85,14 @@ class PointServiceTest {
     long id = 1;
     long amount = 100;
     // when
-    UserPoint userPoint = pointService.charge(id, amount);
-    long beforPoint = userPoint.point();
-    UserPoint secondUserPoint = pointService.charge(id, amount);
+    pointService.charge(id, amount);
+    UserPoint userPoint = pointService.point(id);
+    long beforePoint = userPoint.point();
+    pointService.charge(id, amount);
+    UserPoint secondUserPoint = pointService.point(id);
     long afterPoint = secondUserPoint.point();
     // then
-    assertThat(afterPoint).isGreaterThan(beforPoint);
+    assertThat(afterPoint).isGreaterThan(beforePoint);
   }
 
   /**
@@ -244,6 +246,7 @@ class PointServiceTest {
       assertThat(history.type()).isEqualTo(TransactionType.CHARGE);
     });
   }
+
   /**
    * history 메소드에서 출금하고나서 출금이력이 출력되는지 확인합니다.
    */

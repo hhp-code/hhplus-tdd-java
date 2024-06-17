@@ -49,7 +49,7 @@ public class PointController {
             @RequestBody long amount
     ) {
       log.info("charge id: {}, amount: {}", id, amount);
-        return pointService.charge(id, amount);
+        return pointService.charge(id,amount);
     }
 
     /**
