@@ -3,8 +3,9 @@ package io.hhplus.tdd.point;
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
+@Slf4j
 @Service
 public class PointService {
 
@@ -18,7 +19,7 @@ public class PointService {
 
   public UserPoint point(long id) {
     if(id<0 ){
-      return null;
+      throw new IllegalArgumentException("id must be positive");
     }
     return userPointTable.selectById(id);
   }

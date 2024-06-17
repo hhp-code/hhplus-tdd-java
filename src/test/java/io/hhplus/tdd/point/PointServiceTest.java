@@ -26,16 +26,21 @@ class PointServiceTest {
     assertThat(userPoint.point()).isEqualTo(0);
   }
   /**
-   * point 메소드를 음수값을 테스트하고, 결과값이 없을때 null이 반환되는지 확인합니다.
+   * point 메소드를 음수값을 테스트하고, 결과값이 없을때 exception이 발생하는지 확인합니다.
    */
   @Test
   void point_by_negative_id_then_no_results(){
     //given
     long id = -1L;
     //when
-    UserPoint userPoint = pointService.point(id);
+    String[] message = new String[1];
+    try {
+      pointService.point(id);
+    } catch (IllegalArgumentException e) {
+      message[0] = e.getMessage();
+    }
     //then
-    assertNull(userPoint);
+    assertEquals("id must be positive", message[0]);
   }
 
   /**
