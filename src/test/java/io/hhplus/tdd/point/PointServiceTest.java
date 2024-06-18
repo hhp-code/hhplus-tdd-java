@@ -38,7 +38,7 @@ class PointServiceTest {
       message[0] = e.getMessage();
     }
     //then
-    assertEquals("id must be positive", message[0]);
+    assertEquals("getId must be positive", message[0]);
   }
 
   /**
@@ -73,7 +73,7 @@ class PointServiceTest {
       message[0] = e.getMessage();
     }
     // then
-    assertEquals("amount must be positive", message[0]);
+    assertEquals("getAmount must be positive", message[0]);
   }
 
   /**
@@ -116,7 +116,7 @@ class PointServiceTest {
       message[0] = e.getMessage();
     }
     // then
-    assertThat(message[0]).isEqualTo("amount is exceed Long.MAX_VALUE");
+    assertThat(message[0]).isEqualTo("getAmount is exceed Long.MAX_VALUE");
   }
 
 
@@ -155,7 +155,7 @@ class PointServiceTest {
       message[0] = e.getMessage();
     }
     // then
-    assertEquals("amount must be positive", message[0]);
+    assertEquals("getAmount must be positive", message[0]);
   }
 
   /**
@@ -178,7 +178,7 @@ class PointServiceTest {
       message[0] = e.getMessage();
     }
     // then
-    assertEquals("amount is more than balance", message[0]);
+    assertEquals("getAmount is more than balance", message[0]);
   }
 
 
@@ -210,8 +210,8 @@ class PointServiceTest {
     List<PointHistoryDTO> pointHistory = pointService.history(id);
     // then
     pointHistory.forEach(history -> {
-      assertThat(history.amount()).isEqualTo(amount);
-      assertThat(history.type()).isEqualTo(TransactionType.CHARGE);
+      assertThat(history.getAmount()).isEqualTo(amount);
+      assertThat(history.getType()).isEqualTo(TransactionType.CHARGE);
     });
   }
 
@@ -230,9 +230,9 @@ class PointServiceTest {
     List<PointHistoryDTO> pointHistory = pointService.history(id);
     // then
     pointHistory.stream().filter(history ->
-        history.type() == TransactionType.USE).forEach(history -> {
-      assertThat(history.amount()).isEqualTo(amount);
-      assertThat(history.type()).isEqualTo(TransactionType.USE);
+        history.getType() == TransactionType.USE).forEach(history -> {
+      assertThat(history.getAmount()).isEqualTo(amount);
+      assertThat(history.getType()).isEqualTo(TransactionType.USE);
     });
   }
 
@@ -252,8 +252,8 @@ class PointServiceTest {
     List<PointHistoryDTO> pointHistory = pointService.history(id);
     // then
     pointHistory.forEach(history -> {
-      assertThat(history.amount()).isEqualTo(amount);
-      assertThat(history.type()).isIn(TransactionType.CHARGE, TransactionType.USE);
+      assertThat(history.getAmount()).isEqualTo(amount);
+      assertThat(history.getType()).isIn(TransactionType.CHARGE, TransactionType.USE);
     });
   }
   /**

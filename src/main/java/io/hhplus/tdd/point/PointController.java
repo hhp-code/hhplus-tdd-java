@@ -22,7 +22,7 @@ public class PointController {
     public ResponseEntity<UserPointDTO> point(
             @PathVariable long id
     ) {
-      log.info("point id: {}", id);
+      log.info("point getId: {}", id);
       UserPointDTO userPoint = pointService.point(id);
       return ResponseEntity.ok(userPoint);
     }
@@ -32,7 +32,7 @@ public class PointController {
     public ResponseEntity<List<PointHistoryDTO>> history(
             @PathVariable long id
     ) {
-      log.info("history id: {}", id);
+      log.info("history getId: {}", id);
       List<PointHistoryDTO> history = pointService.history(id);
         return ResponseEntity.ok(history);
     }
@@ -43,7 +43,7 @@ public class PointController {
             @PathVariable long id,
             @RequestBody long amount
     ) {
-      log.info("charge id: {}, amount: {}", id, amount);
+      log.info("charge getId: {}, getAmount: {}", id, amount);
       UserPointDTO charged = pointService.charge(id, amount);
       return ResponseEntity.ok(charged);
     }
@@ -54,7 +54,7 @@ public class PointController {
             @PathVariable long id,
             @RequestBody long amount
     ) {
-      log.info("use id: {}, amount: {}", id, amount);
+      log.info("use getId: {}, getAmount: {}", id, amount);
       UserPointDTO use = pointService.use(id, amount);
       return ResponseEntity.ok(use);
     }

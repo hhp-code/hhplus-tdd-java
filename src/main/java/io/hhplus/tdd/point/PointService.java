@@ -83,7 +83,7 @@ public class PointService {
   // 포인트 조회
   public UserPointDTO point(long id) {
     if (id < 0) {
-      throw new IllegalArgumentException("id must be positive");
+      throw new IllegalArgumentException("getId must be positive");
     }
     return pointRepository.selectById(id);
   }
@@ -101,12 +101,12 @@ public class PointService {
   // 포인트 충전 처리
   private void chargeProcess(long id, long amount) {
     if (amount < 0) {
-      errorMessageThrowing("amount must be positive");
+      errorMessageThrowing("getAmount must be positive");
     }
     userPoints.putIfAbsent(id, new AtomicLong(0));
     long currentAmount = userPoints.get(id).addAndGet(amount);
     if (currentAmount == Long.MIN_VALUE) {
-      errorMessageThrowing("amount is exceed Long.MAX_VALUE");
+      errorMessageThrowing("getAmount is exceed Long.MAX_VALUE");
     }
     pointRepository.insertOrUpdate(id, currentAmount);
     pointRepository.insertHistory(id, amount, TransactionType.CHARGE, System.currentTimeMillis());
@@ -122,12 +122,12 @@ public class PointService {
   // 포인트 사용 처리
   private void useProcess(long id, long amount) {
     if (amount < 0) {
-      errorMessageThrowing("amount must be positive");
+      errorMessageThrowing("getAmount must be positive");
     }
     userPoints.putIfAbsent(id, new AtomicLong(0));
     long currentAmount = userPoints.get(id).addAndGet(-amount);
     if (currentAmount < 0) {
-      errorMessageThrowing("amount is more than balance");
+      errorMessageThrowing("getAmount is more than balance");
     }
     pointRepository.insertOrUpdate(id, currentAmount);
     pointRepository.insertHistory(id, amount, TransactionType.USE, System.currentTimeMillis());
