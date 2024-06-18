@@ -6,6 +6,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -32,6 +33,7 @@ public class PointService {
   }
 
 
+  @Scheduled(fixedDelay = 1000)
   public void queueOperation() {
     while (!requestQueue.isEmpty()) {
       QueueEntity request = requestQueue.poll();
@@ -58,7 +60,7 @@ public class PointService {
   }
 
   UserPoint charge(long id, long amount) {
-    chargeProcess(id, amount);
+    addToQueueByCharge(id, amount);
     return pointRepository.selectById(id);
   }
 
@@ -72,12 +74,11 @@ public class PointService {
       throw new IllegalArgumentException("amount is exceed Long.MAX_VALUE");
     }
     pointRepository.insertOrUpdate(id, currentAmount);
-    System.out.println(id);
     pointRepository.insertHistory(id, amount, TransactionType.CHARGE, System.currentTimeMillis());
   }
 
   public UserPoint use(long id, long amount) {
-    useProcess(id, amount);
+    addToQueueByUse(id, amount);
     return pointRepository.selectById(id);
   }
 

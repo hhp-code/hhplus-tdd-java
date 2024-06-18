@@ -2,10 +2,10 @@ package io.hhplus.tdd.point;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
 /**
  * 해결해야하는 동시성
@@ -17,8 +17,6 @@ import org.junit.jupiter.api.Test;
  */
 public class PointServiceConcurrencyTest {
   private final PointService pointService = new PointService(new PointRepositoryImpl());
-
-
 
   // 레이스컨디션
   @Test
@@ -33,7 +31,7 @@ public class PointServiceConcurrencyTest {
     //when
     for (int i = 0; i < threadCount; i++) {
       executorService.execute(() -> {
-        pointService.addToQueueByCharge(userId, 10L);
+        pointService.charge(userId, 10L);
         latch.countDown();
       });
     }
@@ -55,23 +53,21 @@ public class PointServiceConcurrencyTest {
     CountDownLatch latch = new CountDownLatch(2);
     //when
     executorService.execute(() -> {
-      pointService.addToQueueByCharge(userId1, 10L);
-      pointService.addToQueueByUse(userId2, 10L);
+      pointService.charge(userId1, 10L);
+      pointService.use(userId2, 10L);
       latch.countDown();
     });
 
     executorService.execute(() -> {
-      pointService.addToQueueByCharge(userId2, 10L);
-      pointService.addToQueueByUse(userId1, 10L);
+      pointService.charge(userId2, 10L);
+      pointService.use(userId1, 10L);
       latch.countDown();
     });
     latch.await();
-    //then
     pointService.queueOperation();
     UserPoint userPoint1 = pointService.point(userId1);
     UserPoint userPoint2 = pointService.point(userId2);
-    pointService.history(userId1).forEach(System.out::println);
-    pointService.history(userId2).forEach(System.out::println);
+    //then
     assertEquals(userPoint1.point(), 100);
     assertEquals(userPoint2.point(), 100);
   }
@@ -96,8 +92,9 @@ public class PointServiceConcurrencyTest {
     });
 
     latch.await();
+    pointService.queueOperation();
     UserPoint userPoint = pointService.point(userId);
-    System.out.println("Final amount: " + userPoint.point());
+    assertEquals(120, userPoint.point());
   }
   // 논 리피터블 리드
   @Test
@@ -109,7 +106,6 @@ public class PointServiceConcurrencyTest {
     CountDownLatch latch = new CountDownLatch(2);
     executorService.execute(() -> {
       UserPoint userPoint = pointService.point(userId);
-      System.out.println("First read: " + userPoint.point());
       try {
         Thread.sleep(1000);
       } catch (InterruptedException e) {
@@ -117,7 +113,7 @@ public class PointServiceConcurrencyTest {
       }
       //Non -repeatable read : 같은 읽기를 반복할수 없는 경우
       UserPoint secondUserPoint = pointService.point(userId);
-      System.out.println("Second read: " + secondUserPoint.point());
+      assertEquals(userPoint.point(), secondUserPoint.point());
       latch.countDown();
     });
 
@@ -135,31 +131,33 @@ public class PointServiceConcurrencyTest {
   public void testPhantomRead() throws InterruptedException {
     long userId = 1L;
     pointService.charge(userId, 100L);
-
+    pointService.queueOperation();
     ExecutorService executorService = Executors.newFixedThreadPool(2);
     CountDownLatch latch = new CountDownLatch(2);
-
-    executorService.execute(() -> {
-      UserPoint userPoint = pointService.point(userId);
-      System.out.println("First read: " + userPoint.point());
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      //Phantom read : 같은 쿼리를 반복할때 결과가 달라지는 경우
-      UserPoint secondUserPoint = pointService.point(userId);
-      System.out.println("Second read: " +secondUserPoint.point());
-      latch.countDown();
-    });
+    AtomicLong amount = new AtomicLong(0);
+    executorService.execute(
+        () -> {
+          UserPoint userPoint = pointService.point(userId);
+          System.out.println(userPoint.point());
+          try {
+            Thread.sleep(1000);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+          // Phantom read : 같은 쿼리를 반복할때 결과가 달라지는 경우
+          UserPoint secondUserPoint = pointService.point(userId);
+          System.out.println(secondUserPoint.point());
+          amount.addAndGet(secondUserPoint.point());
+          latch.countDown();
+        });
 
     executorService.execute(() -> {
       pointService.addToQueueByCharge(userId, 50L);
       latch.countDown();
     });
-
-    pointService.queueOperation();
     latch.await();
+    pointService.queueOperation();
+    assertEquals(100, amount.get());
   }
 
 
