@@ -3,19 +3,21 @@ package io.hhplus.tdd.point;
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
 import java.util.List;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class PointRepositoryImpl implements PointRepository{
   PointHistoryTable pointHistoryTable = new PointHistoryTable();
   UserPointTable userPointTable = new UserPointTable();
 
   @Override
-  public UserPoint insertOrUpdate(long id, long amount) {
-    return userPointTable.insertOrUpdate(id, amount);
+  public void insertOrUpdate(long id, long amount) {
+    userPointTable.insertOrUpdate(id, amount);
   }
 
   @Override
-  public PointHistory insertHistory(long id, long amount, TransactionType type, long updateMillis) {
-    return pointHistoryTable.insert(id, amount, type, updateMillis);
+  public void insertHistory(long id, long amount, TransactionType type, long updateMillis) {
+    pointHistoryTable.insert(id, amount, type, updateMillis);
   }
 
   @Override
