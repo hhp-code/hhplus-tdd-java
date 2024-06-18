@@ -18,10 +18,10 @@ class PointServiceTest {
     //given
     long id = 2L;
     //when
-    UserPoint userPoint = pointService.point(id);
+    UserPointDTO userPoint = pointService.point(id);
     //then
-    assertEquals(id, userPoint.id());
-    assertThat(userPoint.point()).isEqualTo(0);
+    assertEquals(id, userPoint.getId());
+    assertThat(userPoint.getPoint()).isEqualTo(0);
   }
   /**
    * point 메소드를 음수값을 테스트하고, 결과값이 없을때 exception이 발생하는지 확인합니다.
@@ -52,9 +52,9 @@ class PointServiceTest {
     // when
     pointService.addToQueueByCharge(id, amount);
     pointService.queueOperation();
-    UserPoint userPoint = pointService.point(id);
+    UserPointDTO userPoint = pointService.point(id);
     // then
-    assertEquals(userPoint.point(), amount);
+    assertEquals(userPoint.getPoint(), amount);
   }
   /**
    * charge 메소드에 음수값을 입력하면 예외가 발생하는지 확인합니다.
@@ -87,12 +87,12 @@ class PointServiceTest {
     // when
     pointService.addToQueueByCharge(id, amount);
     pointService.queueOperation();
-    UserPoint userPoint = pointService.point(id);
-    long beforePoint = userPoint.point();
+    UserPointDTO userPoint = pointService.point(id);
+    long beforePoint = userPoint.getPoint();
     pointService.addToQueueByCharge(id, amount);
     pointService.queueOperation();
-    UserPoint secondUserPoint = pointService.point(id);
-    long afterPoint = secondUserPoint.point();
+    UserPointDTO secondUserPoint = pointService.point(id);
+    long afterPoint = secondUserPoint.getPoint();
     // then
     assertThat(afterPoint).isGreaterThan(beforePoint);
   }
@@ -134,9 +134,9 @@ class PointServiceTest {
     pointService.addToQueueByCharge(id,inputAmount);
     pointService.addToQueueByUse(id, useAmount);
     pointService.queueOperation();
-    UserPoint userPoint = pointService.point(id);
+    UserPointDTO userPoint = pointService.point(id);
     // then
-    assertEquals(remainAmount, userPoint.point());
+    assertEquals(remainAmount, userPoint.getPoint());
   }
   /**
    * use 메소드에 음수값을 입력하면 예외가 발생하는지 확인합니다.
@@ -191,7 +191,7 @@ class PointServiceTest {
     // given
     long id = 1;
     // when
-    List<PointHistory> pointHistory = pointService.history(id);
+    List<PointHistoryDTO> pointHistory = pointService.history(id);
     // then
     assertThat(pointHistory).isEmpty();
   }
@@ -207,7 +207,7 @@ class PointServiceTest {
     // when
     pointService.addToQueueByCharge(id, amount);
     pointService.queueOperation();
-    List<PointHistory> pointHistory = pointService.history(id);
+    List<PointHistoryDTO> pointHistory = pointService.history(id);
     // then
     pointHistory.forEach(history -> {
       assertThat(history.amount()).isEqualTo(amount);
@@ -227,7 +227,7 @@ class PointServiceTest {
     pointService.addToQueueByCharge(id, amount);
     pointService.addToQueueByUse(id, amount);
     pointService.queueOperation();
-    List<PointHistory> pointHistory = pointService.history(id);
+    List<PointHistoryDTO> pointHistory = pointService.history(id);
     // then
     pointHistory.stream().filter(history ->
         history.type() == TransactionType.USE).forEach(history -> {
@@ -249,7 +249,7 @@ class PointServiceTest {
     pointService.addToQueueByCharge(id, amount);
     pointService.addToQueueByUse(id, amount);
     pointService.queueOperation();
-    List<PointHistory> pointHistory = pointService.history(id);
+    List<PointHistoryDTO> pointHistory = pointService.history(id);
     // then
     pointHistory.forEach(history -> {
       assertThat(history.amount()).isEqualTo(amount);
@@ -268,9 +268,9 @@ class PointServiceTest {
     pointService.addToQueueByCharge(id, amount);
     pointService.queueOperation();
 
-    UserPoint userPoint = pointService.futureMapListener(id);
+    UserPointDTO userPoint = pointService.futureMapListener(id);
     // then
-    assertEquals(amount, userPoint.point());
+    assertEquals(amount, userPoint.getPoint());
   }
 
 }

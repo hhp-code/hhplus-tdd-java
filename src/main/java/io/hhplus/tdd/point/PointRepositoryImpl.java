@@ -22,13 +22,15 @@ public class PointRepositoryImpl implements PointRepository{
   }
 
   @Override
-  public UserPoint selectById(long id) {
-    return userPointTable.selectById(id);
+  public UserPointDTO selectById(long id) {
+    UserPoint userPoint = userPointTable.selectById(id);
+    return new UserPointDTO().convertToDTO(userPoint);
   }
 
   @Override
-  public List<PointHistory> selectHistories(long id) {
-    return pointHistoryTable.selectAllByUserId(id);
+  public List<PointHistoryDTO> selectHistories(long id) {
+    List<PointHistory> pointHistories = pointHistoryTable.selectAllByUserId(id);
+    return new PointHistoryDTO().convertToDTO(pointHistories);
   }
 
 }

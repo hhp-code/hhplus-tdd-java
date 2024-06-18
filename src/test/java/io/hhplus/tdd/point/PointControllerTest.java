@@ -38,7 +38,7 @@ class PointControllerTest {
 
 
     //when
-    UserPoint userPoint = new UserPoint(id, 0, System.currentTimeMillis());
+    UserPointDTO userPoint = new UserPointDTO(id, 0);
     when(pointService.point(id)).thenReturn(userPoint);
     //then
     mockMvc
@@ -78,10 +78,10 @@ class PointControllerTest {
   @ParameterizedTest
   @MethodSource("randomValueMultiSupplier")
   void charge(long userId, long amount) throws Exception {
-    //given
+    // given
 
-    //when
-    UserPoint userPoint = new UserPoint(userId, amount, System.currentTimeMillis());
+    // when
+    UserPointDTO userPoint = new UserPointDTO(userId, amount);
     when(pointService.charge(userId, amount)).thenReturn(userPoint);
 
     //then
@@ -99,10 +99,10 @@ class PointControllerTest {
   @ParameterizedTest
   @MethodSource("randomValueMultiSupplier")
   void use(long userId, long amount) throws Exception {
-    //given
+    // given
 
-    //when
-    UserPoint userPoint = new UserPoint(userId, amount, System.currentTimeMillis());
+    // when
+    UserPointDTO userPoint = new UserPointDTO(userId, amount);
     when(pointService.use(userId, amount)).thenReturn(userPoint);
 
     //then

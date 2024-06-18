@@ -25,5 +25,5 @@ public class QueueEntity implements Comparable<QueueEntity>{
   public int compareTo(QueueEntity other) {
     return Long.compare(this.timestamp, other.timestamp);
   }
-  
+
 }

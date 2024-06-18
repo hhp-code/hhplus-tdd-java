@@ -34,7 +34,7 @@ public class PointService {
   // 포인트 갱신을 위한 ConcurrentHashMap
   private final Map<Long, AtomicLong> userPoints = new ConcurrentHashMap<>();
   // 비동기 처리를 위한 CompletableFuture
-  private final Map<Long, CompletableFuture<UserPoint>> futureMap = new ConcurrentHashMap<>();
+  private final Map<Long, CompletableFuture<UserPointDTO>> futureMap = new ConcurrentHashMap<>();
 
   public PointService(PointRepository pointRepository) {
     this.pointRepository = pointRepository;
@@ -63,14 +63,14 @@ public class PointService {
         } else if (request.transactionType == TransactionType.USE) {
           useProcess(request.id, request.amount);
         }
-        UserPoint result = pointRepository.selectById(request.id);
+        UserPointDTO result = pointRepository.selectById(request.id);
         futureMap.get(request.id).complete(result);
       }
     }
   }
 
   // CompletableFuture를 통해 비동기 처리된 결과를 반환
-  public UserPoint futureMapListener(long id) {
+  public UserPointDTO futureMapListener(long id) {
     try {
       return futureMap.get(id).get();
     } catch (Exception e) {
@@ -81,19 +81,19 @@ public class PointService {
   }
 
   // 포인트 조회
-  public UserPoint point(long id) {
+  public UserPointDTO point(long id) {
     if (id < 0) {
       throw new IllegalArgumentException("id must be positive");
     }
     return pointRepository.selectById(id);
   }
 
-  public List<PointHistory> history(long id) {
+  public List<PointHistoryDTO> history(long id) {
     return pointRepository.selectHistories(id);
   }
 
   // 컨트롤러 단에서 받아온 충전 요청을 큐에 추가 및 비동기 결과값 대기
-  public UserPoint charge(long id, long amount) {
+  public UserPointDTO charge(long id, long amount) {
     addToQueueByCharge(id, amount);
     return futureMapListener(id);
   }
@@ -114,7 +114,7 @@ public class PointService {
 
   // 컨트롤러 단에서 받아온 포인트 사용 요청을 큐에 추가 및 비동기 결과값 대기
 
-  public UserPoint use(long id, long amount) {
+  public UserPointDTO use(long id, long amount) {
     addToQueueByUse(id, amount);
     return futureMapListener(id);
   }

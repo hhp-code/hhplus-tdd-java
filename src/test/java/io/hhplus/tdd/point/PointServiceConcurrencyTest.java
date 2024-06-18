@@ -41,9 +41,9 @@ public class PointServiceConcurrencyTest {
     latch.await();
     // 큐에 있는 작업을 처리
     pointService.queueOperation();
-    UserPoint userPoint = pointService.point(userId);
+    UserPointDTO userPoint = pointService.point(userId);
     //then
-    assertEquals(initialAmount + 10 * threadCount, userPoint.point());
+    assertEquals(initialAmount + 10 * threadCount, userPoint.getPoint());
   }
   // 데드락
   @Test
@@ -72,11 +72,11 @@ public class PointServiceConcurrencyTest {
     latch.await();
     // 큐에 있는 작업을 처리
     pointService.queueOperation();
-    UserPoint userPoint1 = pointService.point(userId1);
-    UserPoint userPoint2 = pointService.point(userId2);
+    UserPointDTO userPoint1 = pointService.point(userId1);
+    UserPointDTO userPoint2 = pointService.point(userId2);
     //then
-    assertEquals(userPoint1.point(), 100);
-    assertEquals(userPoint2.point(), 100);
+    assertEquals(userPoint1.getPoint(), 100);
+    assertEquals(userPoint2.getPoint(), 100);
   }
   // 로스트 업데이트
   @Test
@@ -106,9 +106,9 @@ public class PointServiceConcurrencyTest {
     latch.await();
     // 큐에 있는 작업을 처리
     pointService.queueOperation();
-    UserPoint userPoint = pointService.point(userId);
+    UserPointDTO userPoint = pointService.point(userId);
     //then
-    assertEquals(120, userPoint.point());
+    assertEquals(120, userPoint.getPoint());
   }
   // 논 리피터블 리드
   @Test
@@ -123,16 +123,16 @@ public class PointServiceConcurrencyTest {
     //when
     // 첫번째 스레드는 userId를 조회하고 1초후 다시 조회
     executorService.execute(() -> {
-      UserPoint userPoint = pointService.point(userId);
+      UserPointDTO userPoint = pointService.point(userId);
       try {
         Thread.sleep(1000);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
       //Non -repeatable read : 같은 읽기를 반복할수 없는 경우
-      UserPoint secondUserPoint = pointService.point(userId);
+      UserPointDTO secondUserPoint = pointService.point(userId);
       //then
-      assertEquals(userPoint.point(), secondUserPoint.point());
+      assertEquals(userPoint.getPoint(), secondUserPoint.getPoint());
       latch.countDown();
     });
 
@@ -164,16 +164,16 @@ public class PointServiceConcurrencyTest {
     // 첫번째 스레드는 userId를 조회하고 1초후 다시 조회
     executorService.execute(
         () -> {
-          UserPoint userPoint = pointService.point(userId);
-          beforeAmount.addAndGet(userPoint.point());
+          UserPointDTO userPoint = pointService.point(userId);
+          beforeAmount.addAndGet(userPoint.getPoint());
           try {
             Thread.sleep(1000);
           } catch (InterruptedException e) {
             e.printStackTrace();
           }
           // Phantom read : 같은 쿼리를 반복할때 결과가 달라지는 경우
-          UserPoint secondUserPoint = pointService.point(userId);
-          afterAmount.addAndGet(secondUserPoint.point());
+          UserPointDTO secondUserPoint = pointService.point(userId);
+          afterAmount.addAndGet(secondUserPoint.getPoint());
           latch.countDown();
         });
 
