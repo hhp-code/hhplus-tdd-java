@@ -1,4 +1,3 @@
-
 package io.hhplus.tdd.point;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -189,4 +188,3 @@ public class PointServiceConcurrencyTest {
     assertEquals(beforeAmount.get(), afterAmount.get());
   }
 }
-

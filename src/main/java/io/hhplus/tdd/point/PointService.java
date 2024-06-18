@@ -1,4 +1,3 @@
-
 package io.hhplus.tdd.point;
 
 import java.util.List;
@@ -140,4 +139,3 @@ public class PointService {
     throw new IllegalArgumentException(message);
   }
 }
-
