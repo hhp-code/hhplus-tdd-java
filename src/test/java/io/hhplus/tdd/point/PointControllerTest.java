@@ -36,6 +36,7 @@ class PointControllerTest {
   void point(long id) throws Exception {
     //given
 
+
     //when
     UserPoint userPoint = new UserPoint(id, 0, System.currentTimeMillis());
     when(pointService.point(id)).thenReturn(userPoint);

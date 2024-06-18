@@ -5,6 +5,7 @@ import io.hhplus.tdd.database.UserPointTable;
 import java.util.List;
 import org.springframework.stereotype.Repository;
 
+
 @Repository
 public class PointRepositoryImpl implements PointRepository{
   PointHistoryTable pointHistoryTable = new PointHistoryTable();

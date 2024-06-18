@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class PointService {
 
+
   private final PointRepository pointRepository;
   // 요청을 처리하기 위한 ConcurrentLinkedQueue
   private final Queue<QueueEntity> requestQueue = new ConcurrentLinkedQueue<>();

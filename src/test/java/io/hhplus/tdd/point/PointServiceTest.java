@@ -182,6 +182,7 @@ class PointServiceTest {
   }
 
 
+
   /**
    * history 메소드를 테스트하고, 결과값이 없을때 빈 리스트가 반환되는지 확인합니다.
    */
