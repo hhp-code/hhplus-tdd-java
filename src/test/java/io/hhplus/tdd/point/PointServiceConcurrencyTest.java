@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 public class PointServiceConcurrencyTest {
   private final PointService pointService = new PointService(new PointRepositoryImpl());
 
+
   // 레이스컨디션
   @Test
   public void testRaceCondition() throws InterruptedException {
