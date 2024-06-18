@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/point")
 public class PointController {
@@ -59,4 +60,5 @@ public class PointController {
       UserPoint use = pointService.use(id, amount);
       return ResponseEntity.ok(use);
     }
+
 }

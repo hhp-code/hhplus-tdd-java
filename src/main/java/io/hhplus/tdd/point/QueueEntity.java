@@ -1,5 +1,6 @@
 package io.hhplus.tdd.point;
 
+
 import java.sql.Time;
 import lombok.Getter;
 
@@ -24,4 +25,5 @@ public class QueueEntity implements Comparable<QueueEntity>{
   public int compareTo(QueueEntity other) {
     return Long.compare(this.timestamp, other.timestamp);
   }
+  
 }

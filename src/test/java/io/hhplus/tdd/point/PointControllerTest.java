@@ -1,5 +1,6 @@
 package io.hhplus.tdd.point;
 
+
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -115,4 +116,5 @@ class PointControllerTest {
         .andExpect(jsonPath("$.point").value(amount));
     verify(pointService).use(userId, amount);
   }
+
 }

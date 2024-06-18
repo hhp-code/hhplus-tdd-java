@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
+
 class PointServiceTest {
   private final PointService pointService = new PointService(new  PointRepositoryImpl());
 
@@ -271,4 +272,5 @@ class PointServiceTest {
     // then
     assertEquals(amount, userPoint.point());
   }
+
 }
