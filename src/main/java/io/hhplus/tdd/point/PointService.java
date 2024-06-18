@@ -12,13 +12,16 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 /**
- * 주요 로직 1. 포인트 충전 또는 사용 요청을 큐에 추가, CompleatableFuture를 결과값을 비동기로 대기합니다. 2. 큐 객체가 생성되면서 큐 객체에는
- * 타임스탬프가 존재하여 큐에 추가된 순서대로 처리됨. 3. 큐에서 나온요청은 AtomicLong을 저장하는 ConcurrentHashMap에 의해 값 비교를 하며 갱신됩니다.
- * 4. 주기적으로 큐에 있는 요청을 처리하면서 포인트를 갱신합니다. 그리고 결과값을 CompletableFuture에 저장합니다. 5. 처음에 요청했던 값을
- * CompletableFuture를 통해 비동기로 반환합니다.
+ * 주요 로직 1. 포인트 충전 또는 사용 요청을 큐에 추가, CompleatableFuture를 결과값을 비동기로 대기합니다.
+ * 2. 큐 객체가 생성되면서 큐 객체에는 타임스탬프가 존재하여 큐에 추가된 순서대로 처리됨.
+ * 3. 큐에서 나온요청은 AtomicLong을 저장하는 ConcurrentHashMap에 의해 값 비교를 하며 갱신됩니다.
+ * 4. 주기적으로 큐에 있는 요청을 처리하면서 포인트를 갱신합니다. 그리고 결과값을 CompletableFuture에 저장합니다.
+ * 5. 처음에 요청했던 값을 CompletableFuture를 통해 비동기로 반환합니다.
  *
- * <p>의문 사항 1. CompleatableFuture를 사용하여 결과값을 기다리지만, 결과값이 없을경우에 대한 로직이 빈약한것같습니다. 예상 개선 사항 1. 만약에 비동기
- * 처리된 결과값이 반환되지않을 경우 대기시간을 설정해야 할수도 있을것 같습니다.
+ * 의문 사항
+ * 1. CompleatableFuture를 사용하여 결과값을 기다리지만, 결과값이 없을경우에 대한 로직이 빈약한것같습니다.
+ * 예상 개선 사항
+ * 1. 만약에 비동기 처리된 결과값이 반환되지않을 경우 대기시간을 설정해야 할수도 있을것 같습니다.
  */
 @Slf4j
 @Service
