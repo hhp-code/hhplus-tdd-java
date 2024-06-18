@@ -1,3 +1,4 @@
+
 package io.hhplus.tdd.point;
 
 import io.hhplus.tdd.database.PointHistoryTable;
@@ -31,3 +32,4 @@ public class PointRepositoryImpl implements PointRepository{
     return pointHistoryTable.selectAllByUserId(id);
   }
 }
+

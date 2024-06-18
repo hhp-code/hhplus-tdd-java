@@ -1,3 +1,4 @@
+
 package io.hhplus.tdd.point;
 
 import java.sql.Time;
@@ -26,3 +27,4 @@ public class QueueEntity implements Comparable<QueueEntity>{
     return Long.compare(this.timestamp, other.timestamp);
   }
 }
+

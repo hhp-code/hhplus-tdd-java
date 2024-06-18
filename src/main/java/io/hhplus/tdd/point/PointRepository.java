@@ -1,3 +1,4 @@
+
 package io.hhplus.tdd.point;
 
 import java.util.List;
@@ -9,3 +10,4 @@ public interface PointRepository {
   UserPoint selectById(long id);
   List<PointHistory> selectHistories(long id);
 }
+
