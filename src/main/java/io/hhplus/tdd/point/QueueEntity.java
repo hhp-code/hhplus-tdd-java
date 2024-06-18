@@ -3,7 +3,6 @@ package io.hhplus.tdd.point;
 import java.sql.Time;
 import lombok.Getter;
 
-
 // 큐에 저장되는 객체를 정의한 클래스
 public class QueueEntity implements Comparable<QueueEntity>{
   long id;
