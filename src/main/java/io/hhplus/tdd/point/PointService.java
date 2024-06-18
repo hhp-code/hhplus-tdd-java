@@ -2,6 +2,7 @@ package io.hhplus.tdd.point;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,7 +64,11 @@ public class PointService {
         } else if (request.transactionType == TransactionType.USE) {
           useProcess(request.id, request.amount);
         }
-        UserPointDTO result = pointRepository.selectById(request.id);
+        UserPointDTO result = pointRepository.selectById(request.id).orElseThrow(() ->{
+            log.error("UserPointDTO is not found");
+          return new IllegalArgumentException("UserPointDTO is not found");
+            }
+        );
         futureMap.get(request.id).complete(result);
       }
     }
@@ -85,11 +90,22 @@ public class PointService {
     if (id < 0) {
       throw new IllegalArgumentException("getId must be positive");
     }
-    return pointRepository.selectById(id);
+    return pointRepository.selectById(id).orElseThrow(
+        () -> {
+          log.error("server error");
+          return new IllegalArgumentException("server error");
+        }
+    );
   }
 
   public List<PointHistoryDTO> history(long id) {
-    return pointRepository.selectHistories(id);
+    List<PointHistoryDTO> pointHistoryDTOS = pointRepository.selectHistories(id).orElseThrow(
+        () -> {
+          log.error("server error");
+          return new IllegalArgumentException("server error");
+        }
+    );
+    return pointHistoryDTOS;
   }
 
   // 컨트롤러 단에서 받아온 충전 요청을 큐에 추가 및 비동기 결과값 대기

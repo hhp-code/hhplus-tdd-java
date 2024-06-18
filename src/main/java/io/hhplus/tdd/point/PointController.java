@@ -41,10 +41,10 @@ public class PointController {
     @PatchMapping("{id}/charge")
     public ResponseEntity<UserPointDTO> charge(
             @PathVariable long id,
-            @RequestBody long amount
+            @RequestBody UserPointDTO userPointDTO
     ) {
-      log.info("charge getId: {}, getAmount: {}", id, amount);
-      UserPointDTO charged = pointService.charge(id, amount);
+      log.info("charge getId: {}, getAmount: {}", id, userPointDTO.getPoint());
+    UserPointDTO charged = pointService.charge(id, userPointDTO.getPoint());
       return ResponseEntity.ok(charged);
     }
 
@@ -52,10 +52,10 @@ public class PointController {
     @PatchMapping("{id}/use")
     public ResponseEntity<UserPointDTO> use(
             @PathVariable long id,
-            @RequestBody long amount
+            @RequestBody UserPointDTO userPointDTO
     ) {
-      log.info("use getId: {}, getAmount: {}", id, amount);
-      UserPointDTO use = pointService.use(id, amount);
+      log.info("use getId: {}, getAmount: {}", id, userPointDTO.getPoint());
+      UserPointDTO use = pointService.use(id, userPointDTO.getPoint());
       return ResponseEntity.ok(use);
     }
 

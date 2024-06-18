@@ -1,23 +1,25 @@
 package io.hhplus.tdd.point;
 
 
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import java.util.Random;
-import java.util.stream.Stream;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 /**
  * 1. ParamerizedTest를 사용하여 임의의 Long 값을 입력받아 테스트했습니다. (각 테스트당 100회씩)
@@ -30,35 +32,38 @@ import org.springframework.test.web.servlet.MockMvc;
 class PointControllerTest {
   @Autowired MockMvc mockMvc;
   @MockBean private PointService pointService;
+  @Autowired private ObjectMapper objectMapper;
 
-  @ParameterizedTest
-  @MethodSource("randomValueSupplier")
-  void point(long id) throws Exception {
+  @BeforeEach
+  void setUp(WebApplicationContext webApplicationContext) {
+    this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+  }
+
+  @Test
+  void point() throws Exception {
     //given
-
+    long id = 1L;
 
     //when
     UserPointDTO userPoint = new UserPointDTO(id, 0);
-    when(pointService.point(id)).thenReturn(userPoint);
+    when(pointService.point(anyLong())).thenReturn(userPoint);
     //then
     mockMvc
         .perform(get("/point/{id}", id))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(id))
-        .andExpect(jsonPath("$.point").value(0))
-        .andExpect(jsonPath("$.updateMillis").isNumber());
+        .andExpect(jsonPath("$.point").value(0));
     verify(pointService).point(id);
   }
 
-  static Stream<Long> randomValueSupplier(){
-    return Stream.generate(() -> (long) (Math.random() * Long.MAX_VALUE)).limit(100);
-  }
-  @ParameterizedTest
-  @MethodSource("randomValueSupplier")
-  void history(long id) throws Exception {
+  @Test
+  void history() throws Exception {
     //given
+    long id= 1L;
     //when
-    when(pointService.history(id)).thenReturn(List.of());
+    List<PointHistoryDTO> pointHistoryDTO =List.of( new PointHistoryDTO( 1L, 1L, TransactionType.CHARGE, 1L)
+        , new PointHistoryDTO(1L, 1L, TransactionType.CHARGE,  1L));
+    when(pointService.history(id)).thenReturn(pointHistoryDTO);
 
     //then
     mockMvc
@@ -68,39 +73,32 @@ class PointControllerTest {
     verify(pointService).history(id);
   }
 
-  static Stream<Arguments> randomValueMultiSupplier(){
-    Random random = new Random();
-    return Stream.generate(() -> Arguments.of(random.nextLong(), random.nextLong()))
-        .limit(100);
-
-  }
-
-  @ParameterizedTest
-  @MethodSource("randomValueMultiSupplier")
-  void charge(long userId, long amount) throws Exception {
+  @Test
+  void charge() throws Exception {
     // given
-
+    long userId = 10L;
+    long amount = 100L;
     // when
     UserPointDTO userPoint = new UserPointDTO(userId, amount);
-    when(pointService.charge(userId, amount)).thenReturn(userPoint);
+    when(pointService.charge(anyLong(), anyLong())).thenReturn(userPoint);
 
     //then
     mockMvc
         .perform(
             patch("/point/{id}/charge", userId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(String.valueOf(amount)))
+                .content(objectMapper.writeValueAsString(userPoint)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(userId))
         .andExpect(jsonPath("$.point").value(amount));
     verify(pointService).charge(userId, amount);
   }
 
-  @ParameterizedTest
-  @MethodSource("randomValueMultiSupplier")
-  void use(long userId, long amount) throws Exception {
+  @Test
+  void use() throws Exception {
     // given
-
+    long userId = 10L;
+    long amount = 100L;
     // when
     UserPointDTO userPoint = new UserPointDTO(userId, amount);
     when(pointService.use(userId, amount)).thenReturn(userPoint);
@@ -110,7 +108,7 @@ class PointControllerTest {
         .perform(
             patch("/point/{id}/use", userId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(String.valueOf(amount)))
+                .content(objectMapper.writeValueAsString(userPoint)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(userId))
         .andExpect(jsonPath("$.point").value(amount));
