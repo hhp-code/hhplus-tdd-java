@@ -1,4 +1,3 @@
-
 package io.hhplus.tdd.point;
 
 import static org.assertj.core.api.Assertions.*;
@@ -274,4 +273,3 @@ class PointServiceTest {
     assertEquals(amount, userPoint.point());
   }
 }
-

@@ -1,4 +1,3 @@
-
 package io.hhplus.tdd.point;
 
 import static org.mockito.Mockito.verify;
@@ -118,4 +117,3 @@ class PointControllerTest {
     verify(pointService).use(userId, amount);
   }
 }
-
