@@ -50,7 +50,8 @@ class PointServiceTest {
     long id = 1;
     long amount = 100;
     // when
-    pointService.charge(id, amount);
+    pointService.addToQueueByCharge(id, amount);
+    pointService.queueOperation();
     UserPoint userPoint = pointService.point(id);
     // then
     assertEquals(userPoint.point(), amount);
@@ -66,7 +67,8 @@ class PointServiceTest {
     // when
     String[] message = new String[1];
     try {
-      pointService.charge(id, amount);
+      pointService.addToQueueByCharge(id, amount);
+      pointService.queueOperation();
     } catch (IllegalArgumentException e) {
       message[0] = e.getMessage();
     }
@@ -83,10 +85,12 @@ class PointServiceTest {
     long id = 1;
     long amount = 100;
     // when
-    pointService.charge(id, amount);
+    pointService.addToQueueByCharge(id, amount);
+    pointService.queueOperation();
     UserPoint userPoint = pointService.point(id);
     long beforePoint = userPoint.point();
-    pointService.charge(id, amount);
+    pointService.addToQueueByCharge(id, amount);
+    pointService.queueOperation();
     UserPoint secondUserPoint = pointService.point(id);
     long afterPoint = secondUserPoint.point();
     // then
@@ -102,10 +106,11 @@ class PointServiceTest {
     long id = 1;
     long amount = Long.MAX_VALUE;
     // when
-    pointService.charge(id, 1L);
+    pointService.addToQueueByCharge(id, 1L);
     String[] message = new String[1];
     try{
-      pointService.charge(id, amount);
+      pointService.addToQueueByCharge(id, amount);
+      pointService.queueOperation();
     }
     catch (IllegalArgumentException e){
       message[0] = e.getMessage();
@@ -114,26 +119,6 @@ class PointServiceTest {
     assertThat(message[0]).isEqualTo("amount is exceed Long.MAX_VALUE");
   }
 
-  /**
-   * charge 메소드의 동시성이 순차적으로 관리되는지 확인합니다.
-   */
-  @Test
-  void charge_concurrency(){
-    // given
-    long id = 1;
-    long amount = 100;
-    // when
-    Runnable runnable = () -> pointService.charge(id, amount);
-    Thread thread1 = new Thread(runnable);
-    Thread thread2 = new Thread(runnable);
-    thread1.start();
-    thread2.start();
-    // then
-    assertDoesNotThrow(() -> {
-      thread1.join();
-      thread2.join();
-    });
-  }
 
   /**
    * use 메소드에 액수 사용을 하고나서 사용값이 정상적으로 반영되는지 확인합니다.
@@ -146,8 +131,10 @@ class PointServiceTest {
     long useAmount = 40;
     long remainAmount = inputAmount - useAmount;
     // when
-    pointService.charge(id,inputAmount);
-    UserPoint userPoint = pointService.use(id, useAmount);
+    pointService.addToQueueByCharge(id,inputAmount);
+    pointService.addToQueueByUse(id, useAmount);
+    pointService.queueOperation();
+    UserPoint userPoint = pointService.point(id);
     // then
     assertEquals(remainAmount, userPoint.point());
   }
@@ -162,7 +149,8 @@ class PointServiceTest {
     // when
     String[] message = new String[1];
     try {
-      pointService.use(id, amount);
+      pointService.addToQueueByUse(id, amount);
+      pointService.queueOperation();
     } catch (IllegalArgumentException e) {
       message[0] = e.getMessage();
     }
@@ -180,10 +168,12 @@ class PointServiceTest {
     long inputAmount = 100;
     long useAmount = 200;
     // when
-    pointService.charge(id,inputAmount);
+    pointService.addToQueueByCharge(id,inputAmount);
+    pointService.queueOperation();
     String[] message = new String[1];
     try {
-      pointService.use(id, useAmount);
+      pointService.addToQueueByUse(id, useAmount);
+      pointService.queueOperation();
     } catch (IllegalArgumentException e) {
       message[0] = e.getMessage();
     }
@@ -191,28 +181,6 @@ class PointServiceTest {
     assertEquals("amount is more than balance", message[0]);
   }
 
-
-  /**
-   * use 메소드의 동시성이 순차적으로 관리되는지 확인합니다.
-   */
-  @Test
-  void use_concurrency(){
-    // given
-    long id = 1;
-    long amount = 100;
-    // when
-    pointService.charge(id, amount);
-    Runnable runnable = () -> pointService.use(id, 10);
-    Thread thread1 = new Thread(runnable);
-    Thread thread2 = new Thread(runnable);
-    thread1.start();
-    thread2.start();
-    // then
-    assertDoesNotThrow(() -> {
-      thread1.join();
-      thread2.join();
-    });
-  }
 
   /**
    * history 메소드를 테스트하고, 결과값이 없을때 빈 리스트가 반환되는지 확인합니다.
@@ -236,7 +204,8 @@ class PointServiceTest {
     long id = 1;
     long amount = 100;
     // when
-    pointService.charge(id, amount);
+    pointService.addToQueueByCharge(id, amount);
+    pointService.queueOperation();
     List<PointHistory> pointHistory = pointService.history(id);
     // then
     pointHistory.forEach(history -> {
@@ -254,8 +223,9 @@ class PointServiceTest {
     long id = 1;
     long amount = 100;
     // when
-    pointService.charge(id, amount);
-    pointService.use(id, amount);
+    pointService.addToQueueByCharge(id, amount);
+    pointService.addToQueueByUse(id, amount);
+    pointService.queueOperation();
     List<PointHistory> pointHistory = pointService.history(id);
     // then
     pointHistory.stream().filter(history ->
@@ -275,14 +245,31 @@ class PointServiceTest {
     long id = 1;
     long amount = 100;
     // when
-    pointService.charge(id, amount);
-    pointService.use(id, amount);
+    pointService.addToQueueByCharge(id, amount);
+    pointService.addToQueueByUse(id, amount);
+    pointService.queueOperation();
     List<PointHistory> pointHistory = pointService.history(id);
     // then
     pointHistory.forEach(history -> {
       assertThat(history.amount()).isEqualTo(amount);
       assertThat(history.type()).isIn(TransactionType.CHARGE, TransactionType.USE);
     });
+  }
+  /**
+   * charge 메소드에서 충전하고나서 조회값이 정상적으로 반영되는지 확인합니다.
+   */
+  @Test
+  void charge_after_charge_then_point_results() {
+    // given
+    long id = 1;
+    long amount = 100;
+    // when
+    pointService.addToQueueByCharge(id, amount);
+    pointService.queueOperation();
+
+    UserPoint userPoint = pointService.futureMapListener(id);
+    // then
+    assertEquals(amount, userPoint.point());
   }
 
 
