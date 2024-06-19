@@ -1,6 +1,5 @@
 package io.hhplus.tdd.point;
 
-import io.hhplus.tdd.database.PointHistoryTable;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.Getter;
@@ -25,7 +24,6 @@ public class PointHistoryDTO {
     return pointHistories.stream()
         .map(pointHistory -> new PointHistoryDTO(
             pointHistory.id(),
-            // 수정된 부분
             pointHistory.amount(),
             pointHistory.type(),
             pointHistory.updateMillis()))

@@ -1,6 +1,5 @@
 package io.hhplus.tdd.point;
 
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
