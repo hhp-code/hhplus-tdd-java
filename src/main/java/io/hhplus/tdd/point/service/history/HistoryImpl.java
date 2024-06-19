@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 @Slf4j
+@Component
 public class HistoryImpl implements HistorySpecification {
     private final PointRepository pointRepository;
 

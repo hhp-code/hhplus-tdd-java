@@ -2,7 +2,9 @@ package io.hhplus.tdd.point.service.charge;
 
 import io.hhplus.tdd.point.repository.PointRepository;
 import io.hhplus.tdd.point.TransactionType;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ChargeImpl implements ChargeSpecification {
     private final PointRepository pointRepository;
 
