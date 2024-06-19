@@ -11,7 +11,6 @@ public class UserPointDTO {
         this.id = id;
         this.point = point;
     }
-
   public UserPointDTO() {
 
   }

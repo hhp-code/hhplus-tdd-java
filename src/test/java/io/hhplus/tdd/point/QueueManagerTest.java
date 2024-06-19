@@ -2,19 +2,27 @@ package io.hhplus.tdd.point;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
 
 import java.util.List;
 
+import io.hhplus.tdd.point.repository.PointRepository;
+import io.hhplus.tdd.point.repository.PointRepositoryImpl;
+import io.hhplus.tdd.point.service.charge.ChargeImpl;
+import io.hhplus.tdd.point.service.PointService;
+import io.hhplus.tdd.point.service.QueueManager;
+import io.hhplus.tdd.point.service.history.HistoryImpl;
+import io.hhplus.tdd.point.service.point.PointImpl;
+import io.hhplus.tdd.point.service.use.UseImpl;
 import org.junit.jupiter.api.Test;
 
-class PointServiceTest {
-
-
-  private final PointService pointService = new PointService(new PointRepositoryImpl());
-
+class QueueManagerTest {
+  private final PointRepository pointRepository = new PointRepositoryImpl();
+  private final ChargeImpl chargeImpl = new ChargeImpl(pointRepository);
+  private final UseImpl useImpl = new UseImpl(pointRepository);
+  private final PointImpl pointImpl = new PointImpl(pointRepository);
+  private final HistoryImpl historyImpl = new HistoryImpl(pointRepository);
+  private final QueueManager queueManager = new QueueManager(pointRepository, chargeImpl, useImpl);
+  private final PointService pointService = new PointService(queueManager, pointImpl, historyImpl);
 
   /** point 메소드를 일반 입력값을 테스트하고 결과값이 없을때 0이 반환되는지 확인합니다. */
   @Test
@@ -51,8 +59,8 @@ class PointServiceTest {
     long id = 1;
     long amount = 100;
     // when
-    pointService.addToQueueByCharge(id, amount);
-    pointService.queueOperation();
+    queueManager.addToQueue(id, amount, TransactionType.CHARGE);
+    queueManager.processQueue();
     UserPointDTO userPoint = pointService.point(id);
     // then
     assertEquals(userPoint.getPoint(), amount);
@@ -67,13 +75,13 @@ class PointServiceTest {
     // when
     String[] message = new String[1];
     try {
-      pointService.addToQueueByCharge(id, amount);
-      pointService.queueOperation();
+      queueManager.addToQueue(id, amount, TransactionType.CHARGE);
+      queueManager.processQueue();
     } catch (IllegalArgumentException e) {
       message[0] = e.getMessage();
     }
     // then
-    assertEquals("getAmount must be positive", message[0]);
+    assertEquals("Amount must be positive", message[0]);
   }
 
   /** charge 메소드에 충전을 하고나서 충전값이 이전보다 큰지 확인합니다. */
@@ -83,12 +91,12 @@ class PointServiceTest {
     long id = 1;
     long amount = 100;
     // when
-    pointService.addToQueueByCharge(id, amount);
-    pointService.queueOperation();
+    queueManager.addToQueue(id, amount, TransactionType.CHARGE);
+    queueManager.processQueue();
     UserPointDTO userPoint = pointService.point(id);
     long beforePoint = userPoint.getPoint();
-    pointService.addToQueueByCharge(id, amount);
-    pointService.queueOperation();
+    queueManager.addToQueue(id, amount, TransactionType.CHARGE);
+    queueManager.processQueue();
     UserPointDTO secondUserPoint = pointService.point(id);
     long afterPoint = secondUserPoint.getPoint();
     // then
@@ -102,16 +110,16 @@ class PointServiceTest {
     long id = 1;
     long amount = Long.MAX_VALUE;
     // when
-    pointService.addToQueueByCharge(id, 1L);
+    queueManager.addToQueue(id, 1L, TransactionType.CHARGE);
     String[] message = new String[1];
     try {
-      pointService.addToQueueByCharge(id, amount);
-      pointService.queueOperation();
+      queueManager.addToQueue(id, amount, TransactionType.CHARGE);
+      queueManager.processQueue();
     } catch (IllegalArgumentException e) {
       message[0] = e.getMessage();
     }
     // then
-    assertThat(message[0]).isEqualTo("getAmount is exceed Long.MAX_VALUE");
+    assertThat(message[0]).isEqualTo("Amount exceeds Long.MAX_VALUE");
   }
 
   /** use 메소드에 액수 사용을 하고나서 사용값이 정상적으로 반영되는지 확인합니다. */
@@ -123,9 +131,9 @@ class PointServiceTest {
     long useAmount = 40;
     long remainAmount = inputAmount - useAmount;
     // when
-    pointService.addToQueueByCharge(id, inputAmount);
-    pointService.addToQueueByUse(id, useAmount);
-    pointService.queueOperation();
+    queueManager.addToQueue(id, inputAmount, TransactionType.CHARGE);
+    queueManager.addToQueue(id, useAmount, TransactionType.USE);
+    queueManager.processQueue();
     UserPointDTO userPoint = pointService.point(id);
     // then
     assertEquals(remainAmount, userPoint.getPoint());
@@ -140,13 +148,13 @@ class PointServiceTest {
     // when
     String[] message = new String[1];
     try {
-      pointService.addToQueueByUse(id, amount);
-      pointService.queueOperation();
+      queueManager.addToQueue(id, amount, TransactionType.USE);
+      queueManager.processQueue();
     } catch (IllegalArgumentException e) {
       message[0] = e.getMessage();
     }
     // then
-    assertEquals("getAmount must be positive", message[0]);
+    assertEquals("Amount must be positive", message[0]);
   }
 
   /** use 메소드에 사용을 하고나서 값이 음수가 되는지 확인합니다. */
@@ -157,17 +165,17 @@ class PointServiceTest {
     long inputAmount = 100;
     long useAmount = 200;
     // when
-    pointService.addToQueueByCharge(id, inputAmount);
-    pointService.queueOperation();
+    queueManager.addToQueue(id, inputAmount, TransactionType.CHARGE);
+    queueManager.processQueue();
     String[] message = new String[1];
     try {
-      pointService.addToQueueByUse(id, useAmount);
-      pointService.queueOperation();
+        queueManager.addToQueue(id, useAmount, TransactionType.USE);
+        queueManager.processQueue();
     } catch (IllegalArgumentException e) {
       message[0] = e.getMessage();
     }
     // then
-    assertEquals("getAmount is more than balance", message[0]);
+    assertEquals("Amount exceeds balance", message[0]);
   }
 
   /** history 메소드를 테스트하고, 결과값이 없을때 빈 리스트가 반환되는지 확인합니다. */
@@ -188,8 +196,8 @@ class PointServiceTest {
     long id = 1;
     long amount = 100;
     // when
-    pointService.addToQueueByCharge(id, amount);
-    pointService.queueOperation();
+    queueManager.addToQueue(id, amount, TransactionType.CHARGE);
+    queueManager.processQueue();
     List<PointHistoryDTO> pointHistory = pointService.history(id);
     // then
     pointHistory.forEach(
@@ -206,9 +214,9 @@ class PointServiceTest {
     long id = 1;
     long amount = 100;
     // when
-    pointService.addToQueueByCharge(id, amount);
-    pointService.addToQueueByUse(id, amount);
-    pointService.queueOperation();
+    queueManager.addToQueue(id, amount, TransactionType.CHARGE);
+    queueManager.addToQueue(id, amount, TransactionType.USE);
+    queueManager.processQueue();
     List<PointHistoryDTO> pointHistory = pointService.history(id);
     // then
     pointHistory.stream()
@@ -227,9 +235,9 @@ class PointServiceTest {
     long id = 1;
     long amount = 100;
     // when
-    pointService.addToQueueByCharge(id, amount);
-    pointService.addToQueueByUse(id, amount);
-    pointService.queueOperation();
+    queueManager.addToQueue(id, amount, TransactionType.CHARGE);
+    queueManager.addToQueue(id, amount, TransactionType.USE);
+    queueManager.processQueue();
     List<PointHistoryDTO> pointHistory = pointService.history(id);
     // then
     pointHistory.forEach(
@@ -246,12 +254,11 @@ class PointServiceTest {
     long id = 1;
     long amount = 100;
     // when
-    pointService.addToQueueByCharge(id, amount);
-    pointService.queueOperation();
+    queueManager.addToQueue(id, amount, TransactionType.CHARGE);
+    queueManager.processQueue();
 
-    UserPointDTO userPoint = pointService.futureMapListener(id);
+    UserPointDTO userPoint = pointService.point(id);
     // then
     assertEquals(amount, userPoint.getPoint());
   }
-
 }

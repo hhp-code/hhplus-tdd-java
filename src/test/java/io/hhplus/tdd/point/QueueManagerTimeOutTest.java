@@ -1,5 +1,13 @@
 package io.hhplus.tdd.point;
 
+import io.hhplus.tdd.point.repository.PointRepository;
+import io.hhplus.tdd.point.repository.PointRepositoryImpl;
+import io.hhplus.tdd.point.service.charge.ChargeImpl;
+import io.hhplus.tdd.point.service.PointService;
+import io.hhplus.tdd.point.service.QueueManager;
+import io.hhplus.tdd.point.service.history.HistoryImpl;
+import io.hhplus.tdd.point.service.point.PointImpl;
+import io.hhplus.tdd.point.service.use.UseImpl;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -8,7 +16,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
-public class PointServiceTimeOutTest {
+public class QueueManagerTimeOutTest {
     PointRepository pointRepository = new PointRepositoryImpl(){
         @Override
         public Optional<UserPointDTO> selectById(long id) {
@@ -20,8 +28,12 @@ public class PointServiceTimeOutTest {
             return Optional.of(new UserPointDTO(id, 100));
         }
     };
-    private final PointService pointService = new PointService(pointRepository);
-
+    private final UseImpl useImpl = new UseImpl(pointRepository);
+    private final ChargeImpl chargeImpl = new ChargeImpl(pointRepository);
+    private final PointImpl pointImpl = new PointImpl(pointRepository);
+    private final HistoryImpl historyImpl = new HistoryImpl(pointRepository);
+    private final QueueManager queueManager = new QueueManager(pointRepository, chargeImpl, useImpl);
+    private final PointService pointService = new PointService(queueManager, pointImpl, historyImpl);
     /**
      * 충전 시간이 초과되는 경우 "처리시간이 초과되었습니다." 메시지를 출력하는가?
      */
@@ -52,8 +64,9 @@ public class PointServiceTimeOutTest {
         long amount = 1000L;
 
         // when
-        pointService.addToQueueByCharge(userId, amount+1L);
-        pointService.queueOperation();
+
+        queueManager.addToQueue(userId, amount, TransactionType.CHARGE);
+        queueManager.processQueue();
         // then
         assertTimeoutPreemptively(Duration.ofMillis(10000), () -> {
             assertThatThrownBy(() -> {
