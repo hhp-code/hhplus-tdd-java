@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
 public class UseImpl implements UseSpecification{
     private final PointRepository pointRepository;
 
@@ -19,7 +18,7 @@ public class UseImpl implements UseSpecification{
         if (amount < 0 ) {
             throw new IllegalArgumentException("Amount must be positive");
         }
-        long currentAmount = pointRepository.selectById(id).orElseThrow(()-> new IllegalArgumentException("User not found")).getPoint() -amount;
+        long currentAmount = pointRepository.selectById(id).orElseThrow(()-> new IllegalArgumentException("User not found")).point() -amount;
         if (currentAmount < 0) {
             throw new IllegalArgumentException("Amount exceeds balance");
         }

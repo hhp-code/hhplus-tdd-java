@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Optional;
 
 import io.hhplus.tdd.point.*;
+import io.hhplus.tdd.point.dto.PointHistoryDTO;
+import io.hhplus.tdd.point.dto.UserPointDTO;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -27,14 +29,14 @@ public class PointRepositoryImpl implements PointRepository{
   @Override
   public Optional<UserPointDTO> selectById(long id) {
     UserPoint userPoint = userPointTable.selectById(id);
-    UserPointDTO userPointDTO = new UserPointDTO().convertToDTO(userPoint);
+    UserPointDTO userPointDTO = UserPointDTO.convertToDTO(userPoint);
     return Optional.of(userPointDTO);
   }
 
   @Override
   public Optional<List<PointHistoryDTO>> selectHistories(long id) {
     List<PointHistory> pointHistories = pointHistoryTable.selectAllByUserId(id);
-    List<PointHistoryDTO> pointHistoryDTOS = new PointHistoryDTO().convertToDTO(pointHistories);
+    List<PointHistoryDTO> pointHistoryDTOS = PointHistoryDTO.convertToDTO(pointHistories);
     return Optional.of(pointHistoryDTOS);
   }
 

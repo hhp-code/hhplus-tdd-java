@@ -1,5 +1,6 @@
 package io.hhplus.tdd.point;
 
+import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.repository.PointRepository;
 import io.hhplus.tdd.point.repository.PointRepositoryImpl;
 import io.hhplus.tdd.point.service.charge.ChargeImpl;

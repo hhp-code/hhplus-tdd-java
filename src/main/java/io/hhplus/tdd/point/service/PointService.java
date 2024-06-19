@@ -2,9 +2,9 @@ package io.hhplus.tdd.point.service;
 
 import java.util.List;
 
-import io.hhplus.tdd.point.PointHistoryDTO;
+import io.hhplus.tdd.point.dto.PointHistoryDTO;
 import io.hhplus.tdd.point.TransactionType;
-import io.hhplus.tdd.point.UserPointDTO;
+import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.service.history.HistorySpecification;
 import io.hhplus.tdd.point.service.point.PointImpl;
 import io.hhplus.tdd.point.service.point.PointSpecification;

@@ -1,12 +1,10 @@
 package io.hhplus.tdd.point.service.point;
 
-import io.hhplus.tdd.point.UserPointDTO;
+import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.repository.PointRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
 public class PointImpl implements PointSpecification {
   private final PointRepository pointRepository;
 

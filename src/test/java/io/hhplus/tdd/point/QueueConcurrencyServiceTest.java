@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
+import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.repository.PointRepository;
 import io.hhplus.tdd.point.repository.PointRepositoryImpl;
 import io.hhplus.tdd.point.service.charge.ChargeImpl;
@@ -60,7 +61,7 @@ public class QueueConcurrencyServiceTest {
     queueManager.processQueue();
     UserPointDTO userPoint = pointService.point(userId);
     // then
-    assertEquals(initialAmount + 10 * threadCount, userPoint.getPoint());
+    assertEquals(initialAmount + 10 * threadCount, userPoint.point());
   }
 
   // 데드락
@@ -97,8 +98,8 @@ public class QueueConcurrencyServiceTest {
     UserPointDTO userPoint1 = pointService.point(userId1);
     UserPointDTO userPoint2 = pointService.point(userId2);
     // then
-    assertEquals(userPoint1.getPoint(), 100);
-    assertEquals(userPoint2.getPoint(), 100);
+    assertEquals(userPoint1.point(), 100);
+    assertEquals(userPoint2.point(), 100);
   }
 
   // 로스트 업데이트
@@ -133,7 +134,7 @@ public class QueueConcurrencyServiceTest {
     queueManager.processQueue();
     UserPointDTO userPoint = pointService.point(userId);
     // then
-    assertEquals(120, userPoint.getPoint());
+    assertEquals(120, userPoint.point());
   }
 
   // 논 리피터블 리드
@@ -159,7 +160,7 @@ public class QueueConcurrencyServiceTest {
           // Non -repeatable read : 같은 읽기를 반복할수 없는 경우
           UserPointDTO secondUserPoint = pointService.point(userId);
           // then
-          assertEquals(userPoint.getPoint(), secondUserPoint.getPoint());
+          assertEquals(userPoint.point(), secondUserPoint.point());
           latch.countDown();
         });
 
@@ -193,7 +194,7 @@ public class QueueConcurrencyServiceTest {
     executorService.execute(
         () -> {
           UserPointDTO userPoint = pointService.point(userId);
-          beforeAmount.addAndGet(userPoint.getPoint());
+          beforeAmount.addAndGet(userPoint.point());
           try {
             Thread.sleep(1000);
           } catch (InterruptedException e) {
@@ -201,7 +202,7 @@ public class QueueConcurrencyServiceTest {
           }
           // Phantom read : 같은 쿼리를 반복할때 결과가 달라지는 경우
           UserPointDTO secondUserPoint = pointService.point(userId);
-          afterAmount.addAndGet(secondUserPoint.getPoint());
+          afterAmount.addAndGet(secondUserPoint.point());
           latch.countDown();
         });
 

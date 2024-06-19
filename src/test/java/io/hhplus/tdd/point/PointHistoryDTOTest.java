@@ -3,6 +3,8 @@ package io.hhplus.tdd.point;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+
+import io.hhplus.tdd.point.dto.PointHistoryDTO;
 import org.junit.jupiter.api.Test;
 
 class PointHistoryDTOTest {
@@ -18,13 +20,13 @@ class PointHistoryDTOTest {
     List<PointHistory> pointHistories = List.of(new PointHistory(id, userId,amount, type ,updateMillis));
     // when
     List<PointHistoryDTO> pointHistoryDTOResult =
-        new PointHistoryDTO().convertToDTO(pointHistories);
+        PointHistoryDTO.convertToDTO(pointHistories);
     PointHistoryDTO pointHistoryDTO = pointHistoryDTOResult.get(0);
     // then
-    assertEquals(id, pointHistoryDTO.getId());
-    assertEquals(amount, pointHistoryDTO.getAmount());
-    assertEquals(type, pointHistoryDTO.getType());
-    assertEquals(updateMillis, pointHistoryDTO.getUpdateMillis());
+    assertEquals(id, pointHistoryDTO.id());
+    assertEquals(amount, pointHistoryDTO.amount());
+    assertEquals(type, pointHistoryDTO.type());
+    assertEquals(updateMillis, pointHistoryDTO.updateMillis());
   }
 
 }

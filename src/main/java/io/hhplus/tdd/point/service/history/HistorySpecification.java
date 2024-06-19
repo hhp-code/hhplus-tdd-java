@@ -1,6 +1,6 @@
 package io.hhplus.tdd.point.service.history;
 
-import io.hhplus.tdd.point.PointHistoryDTO;
+import io.hhplus.tdd.point.dto.PointHistoryDTO;
 
 import java.util.List;
 

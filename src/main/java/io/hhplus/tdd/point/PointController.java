@@ -1,12 +1,13 @@
 package io.hhplus.tdd.point;
 
+import io.hhplus.tdd.point.dto.PointHistoryDTO;
+import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.service.PointService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/point")
@@ -37,16 +38,16 @@ public class PointController {
   @PatchMapping("{id}/charge")
   public ResponseEntity<UserPointDTO> charge(
       @PathVariable long id, @RequestBody UserPointDTO userPointDTO) {
-    log.info("charge getId: {}, getAmount: {}", id, userPointDTO.getPoint());
-    UserPointDTO charged = pointService.charge(id, userPointDTO.getPoint());
+    log.info("charge getId: {}, getAmount: {}", id, userPointDTO.point());
+    UserPointDTO charged = pointService.charge(id, userPointDTO.point());
     return ResponseEntity.ok(charged);
   }
 
   @PatchMapping("{id}/use")
   public ResponseEntity<UserPointDTO> use(
       @PathVariable long id, @RequestBody UserPointDTO userPointDTO) {
-    log.info("use getId: {}, getAmount: {}", id, userPointDTO.getPoint());
-    UserPointDTO use = pointService.use(id, userPointDTO.getPoint());
+    log.info("use getId: {}, getAmount: {}", id, userPointDTO.point());
+    UserPointDTO use = pointService.use(id, userPointDTO.point());
     return ResponseEntity.ok(use);
   }
 }

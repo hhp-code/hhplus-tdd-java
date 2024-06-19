@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
+import io.hhplus.tdd.point.dto.PointHistoryDTO;
+import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.repository.PointRepository;
 import io.hhplus.tdd.point.repository.PointRepositoryImpl;
 import io.hhplus.tdd.point.service.charge.ChargeImpl;
@@ -32,8 +34,8 @@ class QueueManagerTest {
     // when
     UserPointDTO userPoint = pointService.point(id);
     // then
-    assertEquals(id, userPoint.getId());
-    assertThat(userPoint.getPoint()).isEqualTo(0);
+    assertEquals(id, userPoint.id());
+    assertThat(userPoint.point()).isEqualTo(0);
   }
 
   /** point 메소드를 음수값을 테스트하고, 결과값이 없을때 exception이 발생하는지 확인합니다. */
@@ -63,7 +65,7 @@ class QueueManagerTest {
     queueManager.processQueue();
     UserPointDTO userPoint = pointService.point(id);
     // then
-    assertEquals(userPoint.getPoint(), amount);
+    assertEquals(userPoint.point(), amount);
   }
 
   /** charge 메소드에 음수값을 입력하면 예외가 발생하는지 확인합니다. */
@@ -81,7 +83,7 @@ class QueueManagerTest {
       message[0] = e.getMessage();
     }
     // then
-    assertEquals("Amount must be positive", message[0]);
+    assertEquals("Amount must be non-negative", message[0]);
   }
 
   /** charge 메소드에 충전을 하고나서 충전값이 이전보다 큰지 확인합니다. */
@@ -94,11 +96,11 @@ class QueueManagerTest {
     queueManager.addToQueue(id, amount, TransactionType.CHARGE);
     queueManager.processQueue();
     UserPointDTO userPoint = pointService.point(id);
-    long beforePoint = userPoint.getPoint();
+    long beforePoint = userPoint.point();
     queueManager.addToQueue(id, amount, TransactionType.CHARGE);
     queueManager.processQueue();
     UserPointDTO secondUserPoint = pointService.point(id);
-    long afterPoint = secondUserPoint.getPoint();
+    long afterPoint = secondUserPoint.point();
     // then
     assertThat(afterPoint).isGreaterThan(beforePoint);
   }
@@ -136,7 +138,7 @@ class QueueManagerTest {
     queueManager.processQueue();
     UserPointDTO userPoint = pointService.point(id);
     // then
-    assertEquals(remainAmount, userPoint.getPoint());
+    assertEquals(remainAmount, userPoint.point());
   }
 
   /** use 메소드에 음수값을 입력하면 예외가 발생하는지 확인합니다. */
@@ -154,7 +156,7 @@ class QueueManagerTest {
       message[0] = e.getMessage();
     }
     // then
-    assertEquals("Amount must be positive", message[0]);
+    assertEquals("Amount must be non-negative", message[0]);
   }
 
   /** use 메소드에 사용을 하고나서 값이 음수가 되는지 확인합니다. */
@@ -202,8 +204,8 @@ class QueueManagerTest {
     // then
     pointHistory.forEach(
         history -> {
-          assertThat(history.getAmount()).isEqualTo(amount);
-          assertThat(history.getType()).isEqualTo(TransactionType.CHARGE);
+          assertThat(history.amount()).isEqualTo(amount);
+          assertThat(history.type()).isEqualTo(TransactionType.CHARGE);
         });
   }
 
@@ -220,11 +222,11 @@ class QueueManagerTest {
     List<PointHistoryDTO> pointHistory = pointService.history(id);
     // then
     pointHistory.stream()
-        .filter(history -> history.getType() == TransactionType.USE)
+        .filter(history -> history.type() == TransactionType.USE)
         .forEach(
             history -> {
-              assertThat(history.getAmount()).isEqualTo(amount);
-              assertThat(history.getType()).isEqualTo(TransactionType.USE);
+              assertThat(history.amount()).isEqualTo(amount);
+              assertThat(history.type()).isEqualTo(TransactionType.USE);
             });
   }
 
@@ -242,8 +244,8 @@ class QueueManagerTest {
     // then
     pointHistory.forEach(
         history -> {
-          assertThat(history.getAmount()).isEqualTo(amount);
-          assertThat(history.getType()).isIn(TransactionType.CHARGE, TransactionType.USE);
+          assertThat(history.amount()).isEqualTo(amount);
+          assertThat(history.type()).isIn(TransactionType.CHARGE, TransactionType.USE);
         });
   }
 
@@ -259,6 +261,6 @@ class QueueManagerTest {
 
     UserPointDTO userPoint = pointService.point(id);
     // then
-    assertEquals(amount, userPoint.getPoint());
+    assertEquals(amount, userPoint.point());
   }
 }
