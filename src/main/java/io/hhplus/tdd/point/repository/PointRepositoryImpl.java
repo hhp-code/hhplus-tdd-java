@@ -56,8 +56,7 @@ public class PointRepositoryImpl implements PointRepository{
    */
   @Override
   public Optional<List<PointHistory>> selectHistories(long id) {
-    List<PointHistory> pointHistories = pointHistoryTable.selectAllByUserId(id);
-    return Optional.of(pointHistories);
+    return Optional.of(pointHistoryTable.selectAllByUserId(id));
   }
 
 }
