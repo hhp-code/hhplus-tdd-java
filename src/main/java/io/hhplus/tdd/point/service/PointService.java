@@ -2,7 +2,7 @@ package io.hhplus.tdd.point.service;
 
 import java.util.List;
 
-import io.hhplus.tdd.point.TransactionType;
+import io.hhplus.tdd.point.domain.TransactionType;
 import io.hhplus.tdd.point.dto.PointHistoryDTO;
 import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.service.history.HistorySpecification;
@@ -19,6 +19,12 @@ public class PointService {
   private final PointSpecification pointImpl;
   private final HistorySpecification historyImpl;
 
+  /**
+   * 포인트 서비스 생성자
+   * @param queueManager : 큐 매니저
+   * @param pointImpl : 포인트 서비스 구현체
+   * @param historyImpl : 히스토리 서비스 구현체
+   */
   public PointService(
       QueueManager queueManager, PointImpl pointImpl, HistorySpecification historyImpl) {
     this.queueManager = queueManager;

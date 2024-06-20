@@ -1,6 +1,6 @@
 package io.hhplus.tdd.point.service.point;
 
-import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.domain.UserPoint;
 import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.repository.PointRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +15,11 @@ public class PointImpl implements PointSpecification {
     this.pointRepository = pointRepository;
   }
 
+    /**
+     * 포인트 조회 프로세스
+     * @param id : 사용자 아이디
+     * @return UserPointDTO : 사용자 아이디와 포인트를 담은 데이터 객체
+     */
   @Override
   public UserPointDTO point(long id) {
     if (id < 0) {

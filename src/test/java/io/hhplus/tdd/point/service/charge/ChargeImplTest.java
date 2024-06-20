@@ -1,6 +1,6 @@
 package io.hhplus.tdd.point.service.charge;
 
-import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.domain.UserPoint;
 import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.repository.PointRepository;
 import io.hhplus.tdd.point.repository.PointRepositoryImpl;
@@ -23,10 +23,9 @@ class ChargeImplTest {
         // when
         ChargeImpl chargeImpl = new ChargeImpl(pointRepository);
         chargeImpl.chargeProcess(userPointDTO);
-        // then
         UserPoint userPoint = pointRepository.selectById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
         UserPointDTO targetDTO = UserPointDTO.convertToDTO(userPoint);
-
+        // then
         assertEquals(userPointDTO,targetDTO);
     }
 }

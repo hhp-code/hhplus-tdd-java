@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.hhplus.tdd.point.TransactionType;
+import io.hhplus.tdd.point.domain.TransactionType;
 import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.repository.PointRepository;
 import io.hhplus.tdd.point.repository.PointRepositoryImpl;
@@ -18,9 +18,12 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 /**
- * 해결해야하는 동시성 1. 레이스컨디션 : 두개 이상의 스레드가 동시에 같은 데이터를 변경할때 예상되는 결과값이 나오지않는 문제 2. 데드락 : 두개 이상의 스레드가 서로의
- * 락을 기다리는 상황 3. 로스트 업데이트 : 두개 이상의 스레드가 동시에 같은 데이터를 변경할때 업데이트값이 조회되지않는 문제 4. 논 리피터블 리드 : 같은 쿼리를 반복할때
- * 업데이트 쿼리로 인하여 결과가 달라지는 문제 5. 팬텀 읽기 : 같은 쿼리를 반복했으나 예상되지않은 값을 읽어오는 문제
+ * 해결해야하는 동시성
+ * 1. 레이스컨디션 : 두개 이상의 스레드가 동시에 같은 데이터를 변경할때 예상되는 결과값이 나오지않는 문제
+ * 2. 데드락 : 두개 이상의 스레드가 서로의 락을 기다리는 상황
+ * 3. 로스트 업데이트 : 두개 이상의 스레드가 동시에 같은 데이터를 변경할때 업데이트값이 조회되지않는 문제
+ * 4. 논 리피터블 리드 : 같은 쿼리를 반복할때 업데이트 쿼리로 인하여 결과가 달라지는 문제
+ * 5. 팬텀 읽기 : 같은 쿼리를 반복했으나 예상되지않은 값을 읽어오는 문제
  */
 public class QueueConcurrencyServiceTest {
   static {
@@ -35,7 +38,7 @@ public class QueueConcurrencyServiceTest {
   private final QueueManager queueManager = new QueueManager(pointRepository, chargeImpl, useImpl);
   private final PointService pointService = new PointService(queueManager, pointImpl, historyImpl);
 
-  // 레이스컨디션
+  // 레이스컨디션에 대한 테스트
   @Test
   public void testRaceCondition() throws InterruptedException {
     // given
@@ -48,7 +51,7 @@ public class QueueConcurrencyServiceTest {
     ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
     CountDownLatch latch = new CountDownLatch(threadCount);
     // when
-    // 10개의 스레드가 동시에 10씩 충전
+    // 10개의 스레드가 동시에 100씩 충전
     for (int i = 0; i < threadCount; i++) {
       executorService.execute(
           () -> {
@@ -125,7 +128,7 @@ public class QueueConcurrencyServiceTest {
         });
 
     // Lost update
-    // 스레드 2는 userId를 30충전
+    // 스레드 2는 userId를 30을 사용
     executorService.execute(
         () -> {
           queueManager.addToQueue(new UserPointDTO(userId, 30L), TransactionType.USE);

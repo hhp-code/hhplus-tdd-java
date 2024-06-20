@@ -1,12 +1,10 @@
 package io.hhplus.tdd.point.service;
 
-import io.hhplus.tdd.point.TransactionType;
+import io.hhplus.tdd.point.domain.TransactionType;
 import io.hhplus.tdd.point.dto.PointHistoryDTO;
 import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.service.history.HistoryImpl;
-import io.hhplus.tdd.point.service.history.HistorySpecification;
 import io.hhplus.tdd.point.service.point.PointImpl;
-import io.hhplus.tdd.point.service.point.PointSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,6 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * 포인트 서비스는 요청을 보내는 역할만 수행하기위해 목을 사용해 테스트를 호출만 검증했습니다.
+ */
 @ExtendWith(MockitoExtension.class)
 class PointServiceTest {
 
@@ -35,6 +36,7 @@ class PointServiceTest {
     @Mock
     private HistoryImpl historyImpl;
 
+    // * PointService에 대한 테스트를 진행합니다.
     @InjectMocks
     private PointService pointService;
 

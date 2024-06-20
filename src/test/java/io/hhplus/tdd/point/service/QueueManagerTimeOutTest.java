@@ -1,7 +1,7 @@
 package io.hhplus.tdd.point.service;
 
-import io.hhplus.tdd.point.TransactionType;
-import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.domain.TransactionType;
+import io.hhplus.tdd.point.domain.UserPoint;
 import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.repository.PointRepository;
 import io.hhplus.tdd.point.repository.PointRepositoryImpl;
@@ -18,11 +18,15 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
+/**
+ * 큐 매니저 시간 초과 테스트 충전 시간과, 사용시간이 초과되는경우 실패됩니다.
+ */
 public class QueueManagerTimeOutTest {
     PointRepository pointRepository = new PointRepositoryImpl(){
         @Override
         public Optional<UserPoint> selectById(long id) {
             try{
+                // 10초 대기 : 임계값이 현재 10초로 설정되어있기 때문입니다.
                 Thread.sleep(10000);
             }catch (InterruptedException e){
                 e.printStackTrace();
