@@ -4,6 +4,7 @@ package io.hhplus.tdd.point.service;
 import java.time.Instant;
 
 import io.hhplus.tdd.point.TransactionType;
+import io.hhplus.tdd.point.dto.UserPointDTO;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -13,24 +14,22 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public class QueueEntity implements Comparable<QueueEntity>{
-  private final long id;
-  private final long amount;
+  private final UserPointDTO userPointDTO;
   private final TransactionType transactionType;
   //시간순서대로 확인하기위해 timestamp 추가
   private final long timestamp;
 
-  QueueEntity(long id, long amount, TransactionType transactionType) {
-    if (id < 0) {
+  QueueEntity(UserPointDTO userPointDTO, TransactionType transactionType) {
+    if (userPointDTO.id() < 0) {
       throw new IllegalArgumentException("ID must be positive");
     }
-    if (amount < 0) {
+    if (userPointDTO.point() < 0) {
       throw new IllegalArgumentException("Amount must be non-negative");
     }
     if (transactionType == null) {
       throw new IllegalArgumentException("TransactionType must not be null");
     }
-    this.id = id;
-    this.amount = amount;
+    this.userPointDTO = userPointDTO;
     this.transactionType = transactionType;
     timestamp = Instant.now().toEpochMilli();
   }

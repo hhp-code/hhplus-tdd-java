@@ -1,9 +1,9 @@
 package io.hhplus.tdd.point.repository;
 
 
-import io.hhplus.tdd.point.dto.PointHistoryDTO;
+import io.hhplus.tdd.point.PointHistory;
+import io.hhplus.tdd.point.UserPoint;
 import io.hhplus.tdd.point.TransactionType;
-import io.hhplus.tdd.point.dto.UserPointDTO;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +11,6 @@ import java.util.Optional;
 public interface PointRepository {
   void insertOrUpdate(long id, long amount);
   void insertHistory(long id, long amount, TransactionType type, long updateMillis);
-  Optional<UserPointDTO> selectById(long id);
-  Optional<List<PointHistoryDTO>> selectHistories(long id);
+  Optional<UserPoint> selectById(long id);
+  Optional<List<PointHistory>> selectHistories(long id);
 }

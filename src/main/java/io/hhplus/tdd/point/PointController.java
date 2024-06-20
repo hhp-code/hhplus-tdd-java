@@ -24,8 +24,8 @@ public class PointController {
   @GetMapping("{id}")
   public ResponseEntity<UserPointDTO> point(@PathVariable long id) {
     log.info("point getId: {}", id);
-    UserPointDTO userPoint = pointService.point(id);
-    return ResponseEntity.ok(userPoint);
+    UserPointDTO point = pointService.point(id);
+    return ResponseEntity.ok(point);
   }
 
   @GetMapping("{id}/histories")
@@ -38,16 +38,16 @@ public class PointController {
   @PatchMapping("{id}/charge")
   public ResponseEntity<UserPointDTO> charge(
       @PathVariable long id, @RequestBody UserPointDTO userPointDTO) {
-    log.info("charge getId: {}, getAmount: {}", id, userPointDTO.point());
-    UserPointDTO charged = pointService.charge(id, userPointDTO.point());
-    return ResponseEntity.ok(charged);
+    log.info("Controller charge getId: {}, getAmount: {}", id, userPointDTO.point());
+    UserPointDTO charge = pointService.charge(userPointDTO);
+    return ResponseEntity.ok(charge);
   }
 
   @PatchMapping("{id}/use")
   public ResponseEntity<UserPointDTO> use(
       @PathVariable long id, @RequestBody UserPointDTO userPointDTO) {
     log.info("use getId: {}, getAmount: {}", id, userPointDTO.point());
-    UserPointDTO use = pointService.use(id, userPointDTO.point());
+    UserPointDTO use = pointService.use(userPointDTO);
     return ResponseEntity.ok(use);
   }
 }

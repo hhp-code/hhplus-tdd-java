@@ -1,7 +1,6 @@
 package io.hhplus.tdd.point;
 
 
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -83,7 +82,7 @@ class PointControllerTest {
     long amount = 100L;
     // when
     UserPointDTO userPoint = new UserPointDTO(userId, amount);
-    when(pointService.charge(anyLong(), anyLong())).thenReturn(userPoint);
+    when(pointService.charge(userPoint)).thenReturn(userPoint);
 
     //then
     mockMvc
@@ -94,7 +93,7 @@ class PointControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(userId))
         .andExpect(jsonPath("$.point").value(amount));
-    verify(pointService).charge(userId, amount);
+    verify(pointService).charge(userPoint);
   }
 
   @Test
@@ -104,7 +103,7 @@ class PointControllerTest {
     long amount = 100L;
     // when
     UserPointDTO userPoint = new UserPointDTO(userId, amount);
-    when(pointService.use(userId, amount)).thenReturn(userPoint);
+    when(pointService.use(userPoint)).thenReturn(userPoint);
 
     //then
     mockMvc
@@ -115,7 +114,7 @@ class PointControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(userId))
         .andExpect(jsonPath("$.point").value(amount));
-    verify(pointService).use(userId, amount);
+    verify(pointService).use(userPoint);
   }
 
 }

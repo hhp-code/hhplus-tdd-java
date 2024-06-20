@@ -1,10 +1,11 @@
-package io.hhplus.tdd.point;
+package io.hhplus.tdd.point.dto;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-import io.hhplus.tdd.point.dto.PointHistoryDTO;
+import io.hhplus.tdd.point.PointHistory;
+import io.hhplus.tdd.point.TransactionType;
 import org.junit.jupiter.api.Test;
 
 class PointHistoryDTOTest {

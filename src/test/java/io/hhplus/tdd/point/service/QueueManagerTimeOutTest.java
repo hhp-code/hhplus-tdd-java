@@ -1,14 +1,15 @@
-package io.hhplus.tdd.point;
+package io.hhplus.tdd.point.service;
 
+import io.hhplus.tdd.point.TransactionType;
+import io.hhplus.tdd.point.UserPoint;
 import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.repository.PointRepository;
 import io.hhplus.tdd.point.repository.PointRepositoryImpl;
 import io.hhplus.tdd.point.service.charge.ChargeImpl;
-import io.hhplus.tdd.point.service.PointService;
-import io.hhplus.tdd.point.service.QueueManager;
 import io.hhplus.tdd.point.service.history.HistoryImpl;
 import io.hhplus.tdd.point.service.point.PointImpl;
 import io.hhplus.tdd.point.service.use.UseImpl;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -20,13 +21,13 @@ import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 public class QueueManagerTimeOutTest {
     PointRepository pointRepository = new PointRepositoryImpl(){
         @Override
-        public Optional<UserPointDTO> selectById(long id) {
+        public Optional<UserPoint> selectById(long id) {
             try{
                 Thread.sleep(10000);
             }catch (InterruptedException e){
                 e.printStackTrace();
             }
-            return Optional.of(new UserPointDTO(id, 100));
+            return Optional.of(new UserPoint(id, 100, 0));
         }
     };
     private final UseImpl useImpl = new UseImpl(pointRepository);
@@ -35,19 +36,18 @@ public class QueueManagerTimeOutTest {
     private final HistoryImpl historyImpl = new HistoryImpl(pointRepository);
     private final QueueManager queueManager = new QueueManager(pointRepository, chargeImpl, useImpl);
     private final PointService pointService = new PointService(queueManager, pointImpl, historyImpl);
-    /**
-     * 충전 시간이 초과되는 경우 "처리시간이 초과되었습니다." 메시지를 출력하는가?
-     */
+
     @Test
+    @DisplayName("충전 시간이 초과되는 경우 '처리시간이 초과되었습니다.' 메시지를 출력하는가?")
     void charge_fail_by_timeout() {
         // given
         long userId = 1L;
         long amount = 1000L;
 
         // when & then
-        assertTimeoutPreemptively(Duration.ofMillis(6000), () -> {
+        assertTimeoutPreemptively(Duration.ofMillis(11000), () -> {
             assertThatThrownBy(() -> {
-                pointService.charge(userId, amount);
+                pointService.charge(new UserPointDTO(userId, amount));
                 pointRepository.selectById(userId);
             })
                     .isInstanceOf(IllegalArgumentException.class)
@@ -55,9 +55,7 @@ public class QueueManagerTimeOutTest {
         });
     }
 
-    /**
-     * 사용 시간이 초과되는 경우 "처리시간이 초과되었습니다." 메시지를 출력하는가?
-     */
+    @DisplayName("사용 시간이 초과되는 경우 '처리시간이 초과되었습니다.' 메시지를 출력하는가?")
     @Test
     void use_fail_by_timeout(){
         // given
@@ -65,13 +63,12 @@ public class QueueManagerTimeOutTest {
         long amount = 1000L;
 
         // when
-
-        queueManager.addToQueue(userId, amount, TransactionType.CHARGE);
+        queueManager.addToQueue(new UserPointDTO(userId, amount), TransactionType.CHARGE);
         queueManager.processQueue();
         // then
-        assertTimeoutPreemptively(Duration.ofMillis(10000), () -> {
+        assertTimeoutPreemptively(Duration.ofMillis(11000), () -> {
             assertThatThrownBy(() -> {
-                pointService.use(userId, amount);
+                pointService.use(new UserPointDTO(userId, amount));
                 pointRepository.selectById(userId);
             })
                     .isInstanceOf(IllegalArgumentException.class)

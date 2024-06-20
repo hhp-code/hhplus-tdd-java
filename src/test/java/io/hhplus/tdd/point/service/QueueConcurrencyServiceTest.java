@@ -1,4 +1,4 @@
-package io.hhplus.tdd.point;
+package io.hhplus.tdd.point.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.concurrent.CountDownLatch;
@@ -6,12 +6,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
+import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.repository.PointRepository;
 import io.hhplus.tdd.point.repository.PointRepositoryImpl;
 import io.hhplus.tdd.point.service.charge.ChargeImpl;
-import io.hhplus.tdd.point.service.PointService;
-import io.hhplus.tdd.point.service.QueueManager;
 import io.hhplus.tdd.point.service.history.HistoryImpl;
 import io.hhplus.tdd.point.service.point.PointImpl;
 import io.hhplus.tdd.point.service.use.UseImpl;
@@ -42,7 +41,8 @@ public class QueueConcurrencyServiceTest {
     // given
     long userId = 1L;
     long initialAmount = 100L;
-    queueManager.addToQueue(userId, initialAmount, TransactionType.CHARGE);
+    UserPointDTO userPointDTO = new UserPointDTO(userId, initialAmount);
+    queueManager.addToQueue(userPointDTO, TransactionType.CHARGE);
     queueManager.processQueue();
     int threadCount = 10;
     ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
@@ -52,7 +52,7 @@ public class QueueConcurrencyServiceTest {
     for (int i = 0; i < threadCount; i++) {
       executorService.execute(
           () -> {
-            queueManager.addToQueue(userId, 10L, TransactionType.CHARGE);
+            queueManager.addToQueue(userPointDTO, TransactionType.CHARGE);
             latch.countDown();
           });
     }
@@ -61,7 +61,7 @@ public class QueueConcurrencyServiceTest {
     queueManager.processQueue();
     UserPointDTO userPoint = pointService.point(userId);
     // then
-    assertEquals(initialAmount + 10 * threadCount, userPoint.point());
+    assertEquals(1100, userPoint.point());
   }
 
   // 데드락
@@ -70,8 +70,11 @@ public class QueueConcurrencyServiceTest {
     // given
     long userId1 = 1L;
     long userId2 = 2L;
-    queueManager.addToQueue(userId1, 100L, TransactionType.CHARGE);
-    queueManager.addToQueue(userId2, 100L, TransactionType.CHARGE);
+    long transactionAmount = 100L;
+    UserPointDTO userPointDTO1 = new UserPointDTO(userId1, transactionAmount);
+    UserPointDTO userPointDTO2 = new UserPointDTO(userId2, transactionAmount);
+    queueManager.addToQueue(userPointDTO1, TransactionType.CHARGE);
+    queueManager.addToQueue(userPointDTO2, TransactionType.CHARGE);
 
     queueManager.processQueue();
     ExecutorService executorService = Executors.newFixedThreadPool(2);
@@ -80,16 +83,16 @@ public class QueueConcurrencyServiceTest {
     // 스레드 1은 userId1을 충전하고 userId2를 사용
     executorService.execute(
         () -> {
-          queueManager.addToQueue(userId1, 10L, TransactionType.CHARGE);
-          queueManager.addToQueue(userId2, 10L, TransactionType.USE);
+          queueManager.addToQueue(new UserPointDTO(userId1, 10L), TransactionType.CHARGE);
+          queueManager.addToQueue(new UserPointDTO(userId2, 10L), TransactionType.USE);
           latch.countDown();
         });
 
     // 스레드 2는 userId2를 충전하고 userId1을 사용
     executorService.execute(
         () -> {
-          queueManager.addToQueue(userId2, 10L, TransactionType.CHARGE);
-          queueManager.addToQueue(userId1, 10L, TransactionType.USE);
+          queueManager.addToQueue(new UserPointDTO(userId2, 10L), TransactionType.CHARGE);
+          queueManager.addToQueue(new UserPointDTO(userId1, 10L), TransactionType.USE);
           latch.countDown();
         });
     latch.await();
@@ -107,7 +110,7 @@ public class QueueConcurrencyServiceTest {
   public void testLostUpdate() throws InterruptedException {
     // given
     long userId = 1L;
-    queueManager.addToQueue(userId, 100L, TransactionType.CHARGE);
+    queueManager.addToQueue(new UserPointDTO(userId, 100L), TransactionType.CHARGE);
     queueManager.processQueue();
 
     ExecutorService executorService = Executors.newFixedThreadPool(2);
@@ -117,7 +120,7 @@ public class QueueConcurrencyServiceTest {
     // 스레드 1은 userId를 50충전
     executorService.execute(
         () -> {
-          queueManager.addToQueue(userId, 50L, TransactionType.CHARGE);
+          queueManager.addToQueue(new UserPointDTO(userId, 50L), TransactionType.CHARGE);
           latch.countDown();
         });
 
@@ -125,7 +128,7 @@ public class QueueConcurrencyServiceTest {
     // 스레드 2는 userId를 30충전
     executorService.execute(
         () -> {
-          queueManager.addToQueue(userId, 30L, TransactionType.USE);
+          queueManager.addToQueue(new UserPointDTO(userId, 30L), TransactionType.USE);
           latch.countDown();
         });
 
@@ -142,7 +145,7 @@ public class QueueConcurrencyServiceTest {
   public void testNonRepeatableRead() throws InterruptedException {
     // given
     long userId = 1L;
-    queueManager.addToQueue(userId, 100L, TransactionType.CHARGE);
+    queueManager.addToQueue(new UserPointDTO(userId, 100L), TransactionType.CHARGE);
     queueManager.processQueue();
 
     ExecutorService executorService = Executors.newFixedThreadPool(2);
@@ -166,7 +169,7 @@ public class QueueConcurrencyServiceTest {
 
     executorService.execute(
         () -> {
-          queueManager.addToQueue(userId, 50L, TransactionType.CHARGE);
+          queueManager.addToQueue(new UserPointDTO(userId, 50L), TransactionType.CHARGE);
           latch.countDown();
         });
 
@@ -180,7 +183,7 @@ public class QueueConcurrencyServiceTest {
   public void testPhantomRead() throws InterruptedException {
     // given
     long userId = 1L;
-    queueManager.addToQueue(userId, 100L, TransactionType.CHARGE);
+    queueManager.addToQueue(new UserPointDTO(userId, 100L), TransactionType.CHARGE);
     queueManager.processQueue();
     ExecutorService executorService = Executors.newFixedThreadPool(2);
     CountDownLatch latch = new CountDownLatch(2);
@@ -208,7 +211,7 @@ public class QueueConcurrencyServiceTest {
 
     executorService.execute(
         () -> {
-          queueManager.addToQueue(userId, 50L, TransactionType.CHARGE);
+          queueManager.addToQueue(new UserPointDTO(userId, 50L), TransactionType.CHARGE);
           latch.countDown();
         });
     latch.await();

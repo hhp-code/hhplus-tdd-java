@@ -10,7 +10,12 @@ import lombok.Builder;
 public record PointHistoryDTO(long id, long amount, TransactionType type, long updateMillis) {
   @Builder
   public PointHistoryDTO {
-    if (id < 0 || amount < 0) throw new IllegalArgumentException("id와 amount는 0보다 작을 수 없습니다.");
+    if(id<0){
+        throw new IllegalArgumentException("Id must be positive");
+    }
+    if(amount < 0) {
+      throw new IllegalArgumentException("Amount must be non-negative");
+    }
   }
 
   public static List<PointHistoryDTO> convertToDTO(List<PointHistory> pointHistories) {

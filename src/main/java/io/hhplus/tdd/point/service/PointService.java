@@ -2,8 +2,8 @@ package io.hhplus.tdd.point.service;
 
 import java.util.List;
 
-import io.hhplus.tdd.point.dto.PointHistoryDTO;
 import io.hhplus.tdd.point.TransactionType;
+import io.hhplus.tdd.point.dto.PointHistoryDTO;
 import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.service.history.HistorySpecification;
 import io.hhplus.tdd.point.service.point.PointImpl;
@@ -37,19 +37,19 @@ public class PointService {
   }
 
   // 컨트롤러 단에서 받아온 충전 요청을 큐에 추가 및 비동기 결과값 대기
-  public UserPointDTO charge(long id, long amount) {
+  public UserPointDTO charge(UserPointDTO userPointDTO) {
     return queueManager.handleRequest(
-        () -> queueManager.addToQueue(id, amount, TransactionType.CHARGE));
+        () -> queueManager.addToQueue(userPointDTO, TransactionType.CHARGE));
   }
 
   // 컨트롤러 단에서 받아온 포인트 사용 요청을 큐에 추가 및 비동기 결과값 대기
-  public UserPointDTO use(long id, long amount) {
+  public UserPointDTO use(UserPointDTO userPointDTO) {
     return queueManager.handleRequest(
-        () -> queueManager.addToQueue(id, amount, TransactionType.USE));
+        () -> queueManager.addToQueue(userPointDTO, TransactionType.USE));
   }
 
   // 에러 메시지 출력 및 예외 발생
-  static void errorMessageThrowing(String message) {
+  public static void errorMessageThrowing(String message) {
     log.error(message);
     throw new IllegalArgumentException(message);
   }
