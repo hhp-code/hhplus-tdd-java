@@ -3,6 +3,7 @@ package io.hhplus.tdd.point.controller;
 import io.hhplus.tdd.point.dto.PointHistoryDTO;
 import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.service.PointService;
+import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -47,29 +48,30 @@ public class PointController {
 
   /**
    * 포인트 충전
-   * @param id : 사용자 아이디
+   *
+   * @param id           : 사용자 아이디
    * @param userPointDTO : 사용자 아이디와 포인트를 담은 데이터 객체
    * @return ResponseEntity<UserPointDTO> : 사용자 아이디와 포인트를 담은 응답 객체
    */
   @PatchMapping("{id}/charge")
-  public ResponseEntity<UserPointDTO> charge(
+  public CompletableFuture<ResponseEntity<UserPointDTO>> charge(
       @PathVariable long id, @RequestBody UserPointDTO userPointDTO) {
     log.info("Controller charge getId: {}, getAmount: {}", id, userPointDTO.point());
-    UserPointDTO charge = pointService.charge(userPointDTO);
-    return ResponseEntity.ok(charge);
+    return pointService.charge(userPointDTO)
+        .thenApply(ResponseEntity::ok);
   }
 
   /**
    * 포인트 사용
-   * @param id : 사용자 아이디
+   *
+   * @param id           : 사용자 아이디
    * @param userPointDTO : 사용자 아이디와 포인트를 담은 데이터 객체
    * @return ResponseEntity<UserPointDTO> : 사용자 아이디와 포인트를 담은 응답 객체
    */
   @PatchMapping("{id}/use")
-  public ResponseEntity<UserPointDTO> use(
+  public CompletableFuture<ResponseEntity<UserPointDTO>> use(
       @PathVariable long id, @RequestBody UserPointDTO userPointDTO) {
     log.info("use getId: {}, getAmount: {}", id, userPointDTO.point());
-    UserPointDTO use = pointService.use(userPointDTO);
-    return ResponseEntity.ok(use);
+ return   pointService.use(userPointDTO).thenApply(ResponseEntity::ok);
   }
 }

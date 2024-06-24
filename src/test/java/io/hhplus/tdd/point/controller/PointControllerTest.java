@@ -1,12 +1,15 @@
 package io.hhplus.tdd.point.controller;
 
 
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +19,8 @@ import io.hhplus.tdd.point.domain.TransactionType;
 import io.hhplus.tdd.point.dto.PointHistoryDTO;
 import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.service.PointService;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +28,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -45,9 +51,10 @@ class PointControllerTest {
   void point() throws Exception {
     //given
     long id = 1L;
-
+    AtomicLong Id = new AtomicLong(id);
+    AtomicLong Point = new AtomicLong(0);
     //when
-    UserPointDTO userPoint = new UserPointDTO(id, 0);
+    UserPointDTO userPoint = new UserPointDTO(Id, Point);
     when(pointService.point(id)).thenReturn(userPoint);
     //then
     mockMvc
@@ -81,19 +88,26 @@ class PointControllerTest {
     // given
     long userId = 10L;
     long amount = 100L;
+    AtomicLong Id = new AtomicLong(userId);
+    AtomicLong Point = new AtomicLong(amount);
     // when
-    UserPointDTO userPoint = new UserPointDTO(userId, amount);
-    when(pointService.charge(userPoint)).thenReturn(userPoint);
+    UserPointDTO userPoint = new UserPointDTO(Id, Point);
+    CompletableFuture<UserPointDTO> userPointDTOCompletableFuture = CompletableFuture.completedFuture(userPoint);
+    when(pointService.charge(userPoint)).thenReturn(userPointDTOCompletableFuture);
 
     //then
-    mockMvc
+    MvcResult mvcResult = mockMvc
         .perform(
             patch("/point/{id}/charge", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(userPoint)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value(userId))
-        .andExpect(jsonPath("$.point").value(amount));
+        .andExpect(request().asyncStarted())
+        .andReturn();
+
+    mockMvc.perform(asyncDispatch(mvcResult))
+        .andExpect(status().isOk()).andDo(print())
+        .andExpect(jsonString -> jsonString.equals(userPoint));
+
     verify(pointService).charge(userPoint);
   }
 
@@ -102,19 +116,25 @@ class PointControllerTest {
     // given
     long userId = 10L;
     long amount = 100L;
+    AtomicLong Id = new AtomicLong(userId);
+    AtomicLong Point = new AtomicLong(amount);
     // when
-    UserPointDTO userPoint = new UserPointDTO(userId, amount);
-    when(pointService.use(userPoint)).thenReturn(userPoint);
+    UserPointDTO userPoint = new UserPointDTO(Id, Point);
+    CompletableFuture<UserPointDTO> userPointDTOCompletableFuture = CompletableFuture.completedFuture(userPoint);
+    when(pointService.use(userPoint)).thenReturn(userPointDTOCompletableFuture);
 
     //then
-    mockMvc
+    MvcResult mvcResult = mockMvc
         .perform(
             patch("/point/{id}/use", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(userPoint)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value(userId))
-        .andExpect(jsonPath("$.point").value(amount));
+        .andExpect(request().asyncStarted())
+        .andReturn();
+
+    mockMvc.perform(asyncDispatch(mvcResult))
+        .andExpect(status().isOk()).andDo(print())
+            .andExpect(jsonString -> jsonString.equals(userPoint));
     verify(pointService).use(userPoint);
   }
 

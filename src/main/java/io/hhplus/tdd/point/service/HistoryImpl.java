@@ -1,4 +1,4 @@
-package io.hhplus.tdd.point.service.history;
+package io.hhplus.tdd.point.service;
 
 import io.hhplus.tdd.point.domain.PointHistory;
 import io.hhplus.tdd.point.dto.PointHistoryDTO;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 @Slf4j
 @Component
-public class HistoryImpl implements HistorySpecification {
+public class HistoryImpl {
     private final PointRepository pointRepository;
 
     public HistoryImpl(PointRepository pointRepository) {
@@ -21,15 +21,9 @@ public class HistoryImpl implements HistorySpecification {
      * @param id : 사용자 아이디
      * @return List<PointHistoryDTO> : 포인트 히스토리 조회 데이터 리스트 객체
      */
-    @Override
     public List<PointHistoryDTO> history(long id) {
         List<PointHistory> pointHistories = pointRepository
-                .selectHistories(id)
-                .orElseThrow(
-                        () -> {
-                            log.error("server error");
-                            return new IllegalArgumentException("server error");
-                        });
+                .getHistories(id);
         return PointHistoryDTO.convertToDTO(pointHistories);
     }
 }

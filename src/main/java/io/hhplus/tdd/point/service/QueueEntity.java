@@ -26,10 +26,10 @@ public class QueueEntity implements Comparable<QueueEntity>{
    */
   QueueEntity(UserPointDTO userPointDTO, TransactionType transactionType) {
     // 사용자 아이디와 포인트가 유효한지 확인
-    if (userPointDTO.id() < 0) {
+    if (userPointDTO.id().get() < 0) {
       throw new IllegalArgumentException("ID must be positive");
     }
-    if (userPointDTO.point() < 0) {
+    if (userPointDTO.point().get() < 0) {
       throw new IllegalArgumentException("Amount must be non-negative");
     }
     // 타입이 유효한지 확인

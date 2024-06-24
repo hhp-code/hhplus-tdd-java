@@ -3,25 +3,23 @@ package io.hhplus.tdd.point.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import io.hhplus.tdd.database.PointHistoryTable;
+import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.domain.TransactionType;
 import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.repository.PointRepository;
 import io.hhplus.tdd.point.repository.PointRepositoryImpl;
-import io.hhplus.tdd.point.service.charge.ChargeImpl;
-import io.hhplus.tdd.point.service.history.HistoryImpl;
-import io.hhplus.tdd.point.service.point.PointImpl;
-import io.hhplus.tdd.point.service.use.UseImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class QueueManagerTest {
-  private final PointRepository pointRepository = new PointRepositoryImpl();
-  private final ChargeImpl chargeImpl = new ChargeImpl(pointRepository);
-  private final UseImpl useImpl = new UseImpl(pointRepository);
+  private final PointRepository pointRepository = new PointRepositoryImpl(new PointHistoryTable(), new UserPointTable());
+  private final QueueManager queueManager = new QueueManager(pointRepository);
+  private final ChargeImpl chargeImpl = new ChargeImpl(queueManager);
+  private final UseImpl useImpl = new UseImpl(queueManager);
   private final PointImpl pointImpl = new PointImpl(pointRepository);
   private final HistoryImpl historyImpl = new HistoryImpl(pointRepository);
-  private final QueueManager queueManager = new QueueManager(pointRepository, chargeImpl, useImpl);
-  private final PointService pointService = new PointService(queueManager, pointImpl, historyImpl);
+  private final PointService pointService = new PointService(pointImpl, historyImpl,useImpl,chargeImpl);
 
 
 
@@ -66,11 +64,11 @@ class QueueManagerTest {
     queueManager.addToQueue(new UserPointDTO(id, amount), TransactionType.CHARGE);
     queueManager.processQueue();
     UserPointDTO userPoint = pointService.point(id);
-    long beforePoint = userPoint.point();
+    long beforePoint = userPoint.point().get();
     queueManager.addToQueue(new UserPointDTO(id, amount), TransactionType.CHARGE);
     queueManager.processQueue();
     UserPointDTO secondUserPoint = pointService.point(id);
-    long afterPoint = secondUserPoint.point();
+    long afterPoint = secondUserPoint.point().get();
     // then
     assertThat(afterPoint).isGreaterThan(beforePoint);
   }

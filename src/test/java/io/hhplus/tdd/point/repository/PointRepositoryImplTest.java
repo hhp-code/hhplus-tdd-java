@@ -28,7 +28,7 @@ class PointRepositoryImplTest {
 
   @Test
   @DisplayName("사용자 아이디로 사용자 포인트 조회")
-  void selectById() {
+  void getById() {
     // given
     long id = 1L;
     UserPoint userPoint = new UserPoint(id, 100L, 1L);
@@ -36,20 +36,20 @@ class PointRepositoryImplTest {
     when(userPointTable.selectById(id)).thenReturn(userPoint);
 
     // then
-    assertNotNull(pointRepository.selectById(id));
+    assertNotNull(pointRepository.getById(id));
     verify(userPointTable).selectById(id);
   }
 
   @Test
   @DisplayName("사용자 아이디로 포인트 히스토리 조회")
-  void selectHistories() {
+  void getHistories() {
     // given
     long id = 1L;
     PointHistory pointHistory = new PointHistory(id, id, 100L, TransactionType.CHARGE, 1L);
     List<PointHistory> pointHistories = List.of(pointHistory);
     // when
     when(pointHistoryTable.selectAllByUserId(id)).thenReturn(pointHistories);
-    List<PointHistory> result = pointRepository.selectHistories(id).orElseThrow();
+    List<PointHistory> result = pointRepository.getHistories(id);
     // then
     assertNotNull(result);
     verify(pointHistoryTable, times(1)).selectAllByUserId(id);

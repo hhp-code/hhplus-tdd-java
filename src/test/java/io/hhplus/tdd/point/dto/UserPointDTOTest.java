@@ -1,6 +1,7 @@
 package io.hhplus.tdd.point.dto;
 
 import io.hhplus.tdd.point.domain.UserPoint;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -26,8 +27,11 @@ class UserPointDTOTest {
         // given
         long id = 1L;
         long point = 100L;
+        AtomicLong atomicId = new AtomicLong(id);
+        AtomicLong atomicLong = new AtomicLong(point);
+
         // when
-        UserPointDTO userPointDTO = new UserPointDTO(id, point);
+        UserPointDTO userPointDTO = new UserPointDTO(atomicId, atomicLong);
         UserPoint userPoint = UserPointDTO.convertToEntity(userPointDTO);
         // then
         assertEquals(id, userPoint.id());

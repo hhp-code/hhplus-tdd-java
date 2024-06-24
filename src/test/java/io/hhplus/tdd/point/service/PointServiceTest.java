@@ -3,8 +3,7 @@ package io.hhplus.tdd.point.service;
 import io.hhplus.tdd.point.domain.TransactionType;
 import io.hhplus.tdd.point.dto.PointHistoryDTO;
 import io.hhplus.tdd.point.dto.UserPointDTO;
-import io.hhplus.tdd.point.service.history.HistoryImpl;
-import io.hhplus.tdd.point.service.point.PointImpl;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +31,10 @@ class PointServiceTest {
 
     @Mock
     private PointImpl pointImpl;
+    @Mock
+    private ChargeImpl chargeImpl;
+    @Mock
+    private UseImpl useImpl;
 
     @Mock
     private HistoryImpl historyImpl;
@@ -42,10 +45,13 @@ class PointServiceTest {
 
     private UserPointDTO userPointDTO;
     private PointHistoryDTO pointHistoryDTO;
+    private CompletableFuture<UserPointDTO> completableFuture;
 
     @BeforeEach
     void setUp() {
         userPointDTO = new UserPointDTO(1L, 100);
+        completableFuture = new CompletableFuture<>();
+        completableFuture.complete(userPointDTO);
         pointHistoryDTO = new PointHistoryDTO(1L, 1L, TransactionType.CHARGE, 1L);
     }
 
@@ -75,23 +81,23 @@ class PointServiceTest {
     @Test
     @DisplayName("충전 메소드가 정상적으로 호출되는지 확인합니다.")
     void when_charge_called_use_chargeImpl() {
-        when(queueManager.handleRequest(any())).thenReturn(userPointDTO);
+        when(chargeImpl.chargeProcess(userPointDTO)).thenReturn(completableFuture);
 
-        UserPointDTO result = pointService.charge(userPointDTO);
+        UserPointDTO result = pointService.charge(userPointDTO).join();
 
-        assertEquals(userPointDTO, result);
-        verify(queueManager, times(1)).handleRequest(any());
+        assertEquals(completableFuture.join(), result);
+        verify(chargeImpl, times(1)).chargeProcess(userPointDTO);
     }
 
     @Test
     @DisplayName("사용 메소드가 정상적으로 호출되는지 확인합니다.")
     void when_use_called_use_useImpl() {
-        when(queueManager.handleRequest(any())).thenReturn(userPointDTO);
+        when(useImpl.useProcess(userPointDTO)).thenReturn(completableFuture);
 
-        UserPointDTO result = pointService.use(userPointDTO);
+        CompletableFuture<UserPointDTO> result = pointService.use(userPointDTO);
 
-        assertEquals(userPointDTO, result);
-        verify(queueManager, times(1)).handleRequest(any());
+        assertEquals(completableFuture, result);
+        verify(useImpl, times(1)).useProcess(userPointDTO);
     }
 
     @Test

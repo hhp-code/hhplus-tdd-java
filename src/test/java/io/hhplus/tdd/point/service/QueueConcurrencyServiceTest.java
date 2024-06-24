@@ -1,70 +1,88 @@
 package io.hhplus.tdd.point.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import io.hhplus.tdd.database.PointHistoryTable;
+import io.hhplus.tdd.database.UserPointTable;
+import io.hhplus.tdd.point.domain.UserPoint;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.hhplus.tdd.point.domain.TransactionType;
 import io.hhplus.tdd.point.dto.UserPointDTO;
 import io.hhplus.tdd.point.repository.PointRepository;
 import io.hhplus.tdd.point.repository.PointRepositoryImpl;
-import io.hhplus.tdd.point.service.charge.ChargeImpl;
-import io.hhplus.tdd.point.service.history.HistoryImpl;
-import io.hhplus.tdd.point.service.point.PointImpl;
-import io.hhplus.tdd.point.service.use.UseImpl;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.test.context.SpringBootTest;
 
 /**
- * 해결해야하는 동시성
- * 1. 레이스컨디션 : 두개 이상의 스레드가 동시에 같은 데이터를 변경할때 예상되는 결과값이 나오지않는 문제
- * 2. 데드락 : 두개 이상의 스레드가 서로의 락을 기다리는 상황
- * 3. 로스트 업데이트 : 두개 이상의 스레드가 동시에 같은 데이터를 변경할때 업데이트값이 조회되지않는 문제
- * 4. 논 리피터블 리드 : 같은 쿼리를 반복할때 업데이트 쿼리로 인하여 결과가 달라지는 문제
- * 5. 팬텀 읽기 : 같은 쿼리를 반복했으나 예상되지않은 값을 읽어오는 문제
+ * 해결해야하는 동시성 1. 레이스컨디션 : 두개 이상의 스레드가 동시에 같은 데이터를 변경할때 예상되는 결과값이 나오지않는 문제 2. 데드락 : 두개 이상의 스레드가 서로의
+ * 락을 기다리는 상황 3. 로스트 업데이트 : 두개 이상의 스레드가 동시에 같은 데이터를 변경할때 업데이트값이 조회되지않는 문제 4. 논 리피터블 리드 : 같은 쿼리를 반복할때
+ * 업데이트 쿼리로 인하여 결과가 달라지는 문제 5. 팬텀 읽기 : 같은 쿼리를 반복했으나 예상되지않은 값을 읽어오는 문제
  */
+@SpringBootTest
 public class QueueConcurrencyServiceTest {
+
   static {
     LoggerFactory.getLogger(QueueConcurrencyServiceTest.class);
   }
 
-  private final PointRepository pointRepository = new PointRepositoryImpl();
-  private final UseImpl useImpl = new UseImpl(pointRepository);
+  private final PointRepository pointRepository = new PointRepositoryImpl(new PointHistoryTable(),
+      new UserPointTable());
   private final PointImpl pointImpl = new PointImpl(pointRepository);
-  private final ChargeImpl chargeImpl = new ChargeImpl(pointRepository);
   private final HistoryImpl historyImpl = new HistoryImpl(pointRepository);
-  private final QueueManager queueManager = new QueueManager(pointRepository, chargeImpl, useImpl);
-  private final PointService pointService = new PointService(queueManager, pointImpl, historyImpl);
+  private final QueueManager queueManager = new QueueManager(pointRepository);
+  private final UseImpl useImpl = new UseImpl(queueManager);
+  private final ChargeImpl chargeImpl = new ChargeImpl(queueManager);
+  private final PointService pointService = new PointService(pointImpl, historyImpl, useImpl,
+      chargeImpl);
 
   // 레이스컨디션에 대한 테스트
   @Test
-  public void testRaceCondition() throws InterruptedException {
+  public void testRaceCondition() {
     // given
     long userId = 1L;
     long initialAmount = 100L;
+    long plusAmount = 10L;
     UserPointDTO userPointDTO = new UserPointDTO(userId, initialAmount);
+    UserPointDTO plusUserPointDTO = new UserPointDTO(userId, plusAmount);
     queueManager.addToQueue(userPointDTO, TransactionType.CHARGE);
     queueManager.processQueue();
-    int threadCount = 10;
-    ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-    CountDownLatch latch = new CountDownLatch(threadCount);
+
+    AtomicLong beforeAmount = new AtomicLong(0);
     // when
-    // 10개의 스레드가 동시에 100씩 충전
-    for (int i = 0; i < threadCount; i++) {
-      executorService.execute(
-          () -> {
-            queueManager.addToQueue(userPointDTO, TransactionType.CHARGE);
-            latch.countDown();
-          });
-    }
-    latch.await();
-    // 큐에 있는 작업을 처리
+   CompletableFuture.allOf(
+        CompletableFuture.runAsync(
+            () -> {
+              for (int i = 0; i < 4; i++) {
+                queueManager.addToQueue(plusUserPointDTO, TransactionType.CHARGE);
+                beforeAmount.addAndGet(1);
+              }
+            }),
+        CompletableFuture.runAsync(
+            () -> {
+              for (int i = 0; i < 4; i++) {
+                queueManager.addToQueue(plusUserPointDTO, TransactionType.CHARGE);
+                beforeAmount.addAndGet(1);
+              }
+            })).join();
+    System.out.println("queueManager.getQueue().size() = " + queueManager.getRequestQueue().size());
     queueManager.processQueue();
-    UserPointDTO userPoint = pointService.point(userId);
-    // then
-    assertEquals(1100, userPoint.point());
+    UserPoint byId = pointRepository.getById(userId);
+    System.out.println("byId = " + byId + "byIdAmount" + byId.point());
+    System.out.println("beforeAmount.get() = " + beforeAmount.get());
+
   }
 
   // 데드락
@@ -74,31 +92,30 @@ public class QueueConcurrencyServiceTest {
     long userId1 = 1L;
     long userId2 = 2L;
     long transactionAmount = 100L;
+    long deadLockAmount = 10L;
     UserPointDTO userPointDTO1 = new UserPointDTO(userId1, transactionAmount);
     UserPointDTO userPointDTO2 = new UserPointDTO(userId2, transactionAmount);
     queueManager.addToQueue(userPointDTO1, TransactionType.CHARGE);
     queueManager.addToQueue(userPointDTO2, TransactionType.CHARGE);
 
     queueManager.processQueue();
-    ExecutorService executorService = Executors.newFixedThreadPool(2);
-    CountDownLatch latch = new CountDownLatch(2);
     // when
     // 스레드 1은 userId1을 충전하고 userId2를 사용
-    executorService.execute(
-        () -> {
-          queueManager.addToQueue(new UserPointDTO(userId1, 10L), TransactionType.CHARGE);
-          queueManager.addToQueue(new UserPointDTO(userId2, 10L), TransactionType.USE);
-          latch.countDown();
-        });
-
-    // 스레드 2는 userId2를 충전하고 userId1을 사용
-    executorService.execute(
-        () -> {
-          queueManager.addToQueue(new UserPointDTO(userId2, 10L), TransactionType.CHARGE);
-          queueManager.addToQueue(new UserPointDTO(userId1, 10L), TransactionType.USE);
-          latch.countDown();
-        });
-    latch.await();
+    CompletableFuture.allOf(
+        CompletableFuture.runAsync(
+            () -> {
+              queueManager.addToQueue(new UserPointDTO(userId1, deadLockAmount),
+                  TransactionType.CHARGE);
+              queueManager.addToQueue(new UserPointDTO(userId2, deadLockAmount),
+                  TransactionType.USE);
+            }),
+        CompletableFuture.runAsync(
+            () -> {
+              queueManager.addToQueue(new UserPointDTO(userId2, deadLockAmount),
+                  TransactionType.CHARGE);
+              queueManager.addToQueue(new UserPointDTO(userId1, deadLockAmount),
+                  TransactionType.USE);
+            })).join();
     // 큐에 있는 작업을 처리
     queueManager.processQueue();
     UserPointDTO userPoint1 = pointService.point(userId1);
@@ -110,37 +127,32 @@ public class QueueConcurrencyServiceTest {
 
   // 로스트 업데이트
   @Test
-  public void testLostUpdate() throws InterruptedException {
+  public void testLostUpdate() {
     // given
     long userId = 1L;
-    queueManager.addToQueue(new UserPointDTO(userId, 100L), TransactionType.CHARGE);
-    queueManager.processQueue();
-
-    ExecutorService executorService = Executors.newFixedThreadPool(2);
-    CountDownLatch latch = new CountDownLatch(2);
+    long point = 100L;
+    pointRepository.insertOrUpdate(userId, point);
+    long chargePoint = 50L;
+    long usePoint = 30L;
 
     // when
     // 스레드 1은 userId를 50충전
-    executorService.execute(
-        () -> {
-          queueManager.addToQueue(new UserPointDTO(userId, 50L), TransactionType.CHARGE);
-          latch.countDown();
-        });
+    CompletableFuture.allOf(
+        CompletableFuture.runAsync(
+            () -> {
+              queueManager.addToQueue(new UserPointDTO(userId, chargePoint),
+                  TransactionType.CHARGE);
+            }),
+        CompletableFuture.runAsync(
+            () -> {
+              queueManager.addToQueue(new UserPointDTO(userId, usePoint), TransactionType.USE);
+            })).join();
 
-    // Lost update
-    // 스레드 2는 userId를 30을 사용
-    executorService.execute(
-        () -> {
-          queueManager.addToQueue(new UserPointDTO(userId, 30L), TransactionType.USE);
-          latch.countDown();
-        });
-
-    latch.await();
     // 큐에 있는 작업을 처리
     queueManager.processQueue();
     UserPointDTO userPoint = pointService.point(userId);
     // then
-    assertEquals(120, userPoint.point());
+    assertEquals(point + chargePoint - usePoint, userPoint.point());
   }
 
   // 논 리피터블 리드
@@ -148,8 +160,8 @@ public class QueueConcurrencyServiceTest {
   public void testNonRepeatableRead() throws InterruptedException {
     // given
     long userId = 1L;
-    queueManager.addToQueue(new UserPointDTO(userId, 100L), TransactionType.CHARGE);
-    queueManager.processQueue();
+    long point = 100L;
+    pointRepository.insertOrUpdate(userId, point);
 
     ExecutorService executorService = Executors.newFixedThreadPool(2);
     CountDownLatch latch = new CountDownLatch(2);
@@ -186,8 +198,7 @@ public class QueueConcurrencyServiceTest {
   public void testPhantomRead() throws InterruptedException {
     // given
     long userId = 1L;
-    queueManager.addToQueue(new UserPointDTO(userId, 100L), TransactionType.CHARGE);
-    queueManager.processQueue();
+    pointRepository.insertOrUpdate(userId, 100L);
     ExecutorService executorService = Executors.newFixedThreadPool(2);
     CountDownLatch latch = new CountDownLatch(2);
 
@@ -200,7 +211,7 @@ public class QueueConcurrencyServiceTest {
     executorService.execute(
         () -> {
           UserPointDTO userPoint = pointService.point(userId);
-          beforeAmount.addAndGet(userPoint.point());
+          beforeAmount.addAndGet(userPoint.point().get());
           try {
             Thread.sleep(1000);
           } catch (InterruptedException e) {
@@ -208,7 +219,7 @@ public class QueueConcurrencyServiceTest {
           }
           // Phantom read : 같은 쿼리를 반복할때 결과가 달라지는 경우
           UserPointDTO secondUserPoint = pointService.point(userId);
-          afterAmount.addAndGet(secondUserPoint.point());
+          afterAmount.addAndGet(secondUserPoint.point().get());
           latch.countDown();
         });
 

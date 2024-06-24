@@ -1,4 +1,4 @@
-package io.hhplus.tdd.point.service.point;
+package io.hhplus.tdd.point.service;
 
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
@@ -12,7 +12,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PointImplTest {
-    private final PointRepository pointRepository= new PointRepositoryImpl();
+    private final PointRepository pointRepository= new PointRepositoryImpl(new PointHistoryTable(), new UserPointTable());
     @Test
     @DisplayName("아이디를 음수로 넣었을때, 조회 메서드를 실행하면 IllegalArgumentException이 발생한다.")
     void point_with_negative_id_then_no_result(){

@@ -4,7 +4,6 @@ package io.hhplus.tdd.point.repository;
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
 import java.util.List;
-import java.util.Optional;
 
 import io.hhplus.tdd.point.domain.PointHistory;
 import io.hhplus.tdd.point.domain.TransactionType;
@@ -13,8 +12,14 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class PointRepositoryImpl implements PointRepository{
-  PointHistoryTable pointHistoryTable = new PointHistoryTable();
-  UserPointTable userPointTable = new UserPointTable();
+  private final PointHistoryTable pointHistoryTable;
+  private final UserPointTable userPointTable;
+
+  public PointRepositoryImpl(PointHistoryTable pointHistoryTable, UserPointTable userPointTable) {
+    this.pointHistoryTable = pointHistoryTable;
+    this.userPointTable = userPointTable;
+  }
+
 
   /**
    * 사용자 포인트를 삽입 또는 업데이트
@@ -22,8 +27,8 @@ public class PointRepositoryImpl implements PointRepository{
    * @param amount : 포인트
    */
   @Override
-  public void insertOrUpdate(long id, long amount) {
-    userPointTable.insertOrUpdate(id, amount);
+  public UserPoint insertOrUpdate(long id, long amount) {
+    return userPointTable.insertOrUpdate(id, amount);
   }
 
   /**
@@ -34,8 +39,8 @@ public class PointRepositoryImpl implements PointRepository{
    * @param updateMillis : 업데이트 시간
    */
   @Override
-  public void insertHistory(long id, long amount, TransactionType type, long updateMillis) {
-    pointHistoryTable.insert(id, amount, type, updateMillis);
+  public PointHistory insertHistory(long id, long amount, TransactionType type, long updateMillis) {
+    return pointHistoryTable.insert(id, amount, type, updateMillis);
   }
 
   /**
@@ -44,9 +49,8 @@ public class PointRepositoryImpl implements PointRepository{
    * @return Optional<UserPoint>  : 사용자 포인트 도메인 객체
    */
   @Override
-  public Optional<UserPoint> selectById(long id) {
-    UserPoint userPoint = userPointTable.selectById(id);
-    return Optional.of(userPoint);
+  public UserPoint getById(long id) {
+    return userPointTable.selectById(id);
   }
 
   /**
@@ -55,8 +59,8 @@ public class PointRepositoryImpl implements PointRepository{
    * @return Optional<List<PointHistory>> : 포인트 히스토리 도메인 객체 리스트
    */
   @Override
-  public Optional<List<PointHistory>> selectHistories(long id) {
-    return Optional.of(pointHistoryTable.selectAllByUserId(id));
+  public List<PointHistory> getHistories(long id) {
+    return pointHistoryTable.selectAllByUserId(id);
   }
 
 }

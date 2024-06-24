@@ -2,6 +2,7 @@ package io.hhplus.tdd.point.controller;
 
 import io.hhplus.tdd.point.dto.PointHistoryDTO;
 import io.hhplus.tdd.point.dto.UserPointDTO;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,14 +19,17 @@ import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** 포인트 컨트롤러 통합 테스트 : SpringBootTest를 활용했고, 랜덤한 포트로 테스트를 진행합니다. */
+/**
+ * 포인트 컨트롤러 통합 테스트 : SpringBootTest를 활용했고, 랜덤한 포트로 테스트를 진행합니다.
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class PointControllerIntegrationTest {
 
   // * RestTemplate, TestRestTemplate 는 3.2 에서 적절하지 않으므로 RestClient를 여러 시도끝에 사용하게되었습니다.
   private RestClient restClient;
   // * 랜덤 포트를 끌어오기 위한 어노테이션
-  @LocalServerPort private int port;
+  @LocalServerPort
+  private int port;
 
   // * 테스트 시작 전에 포트를 끌어오고, RestClient를 생성합니다.
   @BeforeEach
@@ -73,7 +77,9 @@ public class PointControllerIntegrationTest {
   @Test
   public void testChargePoint() {
     long id = 1;
-    UserPointDTO userPointDTO = new UserPointDTO(id, 100);
+    AtomicLong Id = new AtomicLong(1);
+    AtomicLong point = new AtomicLong(100);
+    UserPointDTO userPointDTO = new UserPointDTO(Id, point);
     ResponseEntity<UserPointDTO> response =
         restClient
             .patch()
@@ -92,9 +98,12 @@ public class PointControllerIntegrationTest {
   @Test
   public void testUsePoint() {
     long id = 1;
-    UserPointDTO chargeDTO = new UserPointDTO(id, 100);
+    AtomicLong Id = new AtomicLong(1);
+    AtomicLong chargePoint = new AtomicLong(100);
+    AtomicLong usePoint = new AtomicLong(50);
+    UserPointDTO chargeDTO = new UserPointDTO(Id, chargePoint);
 
-    UserPointDTO userPointDTO = new UserPointDTO(id, 50);
+    UserPointDTO userPointDTO = new UserPointDTO(Id, usePoint);
     RestClient testRestClient;
     testRestClient = RestClient.create("http://localhost:" + port);
     // * ExecutorService를 사용하여 두 개의 스레드를 생성합니다.
@@ -106,13 +115,13 @@ public class PointControllerIntegrationTest {
         () -> {
           try {
             // * charge 작업을 수행합니다.
-                testRestClient
-                    .patch()
-                    .uri("/point/{id}/charge", id)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(chargeDTO)
-                    .retrieve()
-                    .toEntity(UserPointDTO.class);
+            testRestClient
+                .patch()
+                .uri("/point/{id}/charge", id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(chargeDTO)
+                .retrieve()
+                .toEntity(UserPointDTO.class);
             latch.countDown(); // charge 작업 완료 후 countDown 호출
           } catch (Exception e) {
             throw new RuntimeException(e);
